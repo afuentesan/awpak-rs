@@ -123,6 +123,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "awpak-rs"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "202e97749d08359e74a3a4ab4eac8d005b6186d1b9e0ba2940c9c53c1c4ee258"
+dependencies = [
+ "awpak-rs-macros 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cookie",
+ "futures",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "inventory",
+ "multer",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "serde_urlencoded",
+ "strategy-pattern-rs",
+ "tokio",
+]
+
+[[package]]
 name = "awpak-rs-macros"
 version = "0.0.1"
 dependencies = [
@@ -148,7 +171,7 @@ dependencies = [
 name = "awpak-rs-test"
 version = "0.1.0"
 dependencies = [
- "awpak-rs",
+ "awpak-rs 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cucumber",
  "futures",
  "reqwest",
