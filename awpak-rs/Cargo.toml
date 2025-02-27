@@ -1,0 +1,37 @@
+[package]
+name = "awpak-rs"
+version = "0.0.1"
+edition = "2021"
+description = "A lightweight web framework for Rust, built on top of Tokio and Hyper."
+authors = ["Ángel Fuente <awpakj@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/afuentesan/awpak-rs"
+homepage = "https://github.com/afuentesan/awpak-rs"
+documentation = "https://docs.rs/awpak-rs"
+readme = "README.md"
+keywords = ["web", "framework", "http", "tokio", "hyper"]
+categories = ["web-programming", "asynchronous"]
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.138"
+awpak-rs-macros = { version = "0.0.1", path = "../awpak-rs-macros" }
+strategy-pattern-rs = "0.1.0"
+serde_qs = "0.13.0"
+serde_urlencoded = "0.7.1"
+cookie = "0.18.1"
+regex = "1.11.1"
+multer = "3.1.0"
+futures = "0.3.31"
+inventory = "0.3.19"
+
+[dev-dependencies]
+criterion = { version = "0.5.1", features = [ "async_futures" ] }
+
+# [[bench]]
+# name = "execute_middlewares"
+# harness = false

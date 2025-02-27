@@ -1,0 +1,24 @@
+[package]
+name = "awpak-rs-macros"
+version = "0.0.1"
+edition = "2021"
+description = "Macros for awpak-rs, a lightweight web framework for Rust, built on top of Tokio and Hyper."
+authors = ["Ángel Fuente <awpakj@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/afuentesan/awpak-rs"
+homepage = "https://github.com/afuentesan/awpak-rs"
+documentation = "https://docs.rs/awpak-rs-macros"
+readme = "README.md"
+keywords = ["web", "framework", "http", "tokio", "hyper"]
+categories = ["web-programming", "asynchronous"]
+
+[lib]
+name = "awpak_rs_macros"
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+darling = "0.20.10"
+proc-macro2 = "1.0.93"
+quote = "1.0.38"
+syn = "2.0.98"

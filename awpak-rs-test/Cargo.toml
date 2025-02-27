@@ -1,0 +1,81 @@
+[package]
+name = "awpak-rs-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# awpak-rs = { path = "../awpak-rs" }
+# awpak-rs-macros = { path = "../rust-macros/awpak-rs-macros" }
+awpak-rs = { path = "../awpak-rs" }
+# inventory = "0.3.19"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+cucumber = "0.21.1"
+futures = "0.3"
+reqwest = { version = "0.12.12", features = ["multipart"] }
+serde_json = "1.0.138"
+
+[[test]]
+name = "test_get" # this should be the same as the filename of your test target
+harness = false
+
+[[test]]
+name = "test_post"
+harness = false
+
+[[test]]
+name = "test_post_2"
+harness = false
+
+[[test]]
+name = "test_post_params"
+harness = false
+
+[[test]]
+name = "test_multipart_json"
+harness = false
+
+[[test]]
+name = "test_multipart_files"
+harness = false
+
+[[test]]
+name = "test_multipart_data"
+harness = false
+
+[[test]]
+name = "test_content_negotiation"
+harness = false
+
+[[test]]
+name = "test_content_type"
+harness = false
+
+[[test]]
+name = "test_path_variables"
+harness = false
+
+[[test]]
+name = "test_headers"
+harness = false
+
+[[test]]
+name = "test_cookies"
+harness = false
+
+[[test]]
+name = "test_status_code"
+harness = false
+
+[[test]]
+name = "test_query_param"
+harness = false
+
+[[test]]
+name = "test_get_2"
+harness = false
+
+[[test]]
+name = "test_redirects"
+harness = false
