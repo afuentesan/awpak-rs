@@ -162,7 +162,7 @@ fn declare_variable_query_param(
         {
             println!( "Parse query param value err" );
             
-            return Err( awpak_rs::Error::ParserError( format!( "Query param error: {}", #name ) ) )
+            return Err( awpak_rs::error::error::Error::ParserError( format!( "Query param error: {}", #name ) ) )
         }
     };
 
@@ -312,7 +312,7 @@ fn declare_variable_path(
                     let #priv_pat_ident = awpak_rs::parse_path_variable::<#ty>( &__io, #v ).await;
                     if #priv_pat_ident.is_none()
                     {
-                        return Err( awpak_rs::Error::ParserError( format!( "Path variable error: {}", #name ) ) )
+                        return Err( awpak_rs::error::error::Error::ParserError( format!( "Path variable error: {}", #name ) ) )
                     }
                     let #pat_ident = #priv_pat_ident.unwrap();
                 },
@@ -343,7 +343,7 @@ fn declare_variable_body_param(
     let optional_part = quote! {
         if #priv_pat_ident.is_none()
         {
-            return Err( awpak_rs::Error::ParserError( format!( "Body param error: {}", #name ) ) )
+            return Err( awpak_rs::error::error::Error::ParserError( format!( "Body param error: {}", #name ) ) )
         }
     };
 
@@ -370,7 +370,7 @@ fn declare_variable_file(
 
     let priv_pat_ident_assign = quote! {
         let #priv_pat_ident = {
-            use awpak_rs::body::body::ToFileData;
+            use awpak_rs::io::request::request_body::ToFileData;
             <#ty>::to_file_data( &__io.request.body, #filename )
         };
     };
@@ -378,7 +378,7 @@ fn declare_variable_file(
     let optional_part = quote! {
         if #priv_pat_ident.is_err()
         {
-            return Err( awpak_rs::Error::ParserError( format!( "File param error: {}", #filename ) ) )
+            return Err( awpak_rs::error::error::Error::ParserError( format!( "File param error: {}", #filename ) ) )
         }
     };
 
@@ -412,7 +412,7 @@ fn declare_variable_object(
 
             if #priv_pat_ident.is_none()
             {
-                return Err( awpak_rs::Error::ParserError( format!( "{} error: {}", #from, #name ) ) )
+                return Err( awpak_rs::error::error::Error::ParserError( format!( "{} error: {}", #from, #name ) ) )
             }
 
             let #pat_ident = #priv_pat_ident.unwrap();

@@ -102,7 +102,7 @@ fn post_body_param_string_echo(
 #[post( url = "/post_multipart_file_len" )]
 fn post_multipart_file_len(
     #[part_file]
-    img : awpak_rs::body::body::FileData
+    img : awpak_rs::io::request::request_body::FileData
 ) -> usize
 {
     img.bytes.len()
@@ -111,7 +111,7 @@ fn post_multipart_file_len(
 #[post( url = "/post_multipart_files_len" )]
 fn post_multipart_files_len(
     #[part_files]
-    img : Vec<awpak_rs::body::body::FileData>
+    img : Vec<awpak_rs::io::request::request_body::FileData>
 ) -> usize
 {
     img.iter().map( | i | i.bytes.len() ).fold( 0, |a, b| {
@@ -122,7 +122,7 @@ fn post_multipart_files_len(
 #[post( url = "/post_multipart_data" )]
 fn post_multipart_data(
     #[part_file]
-    img : awpak_rs::body::body::FileData,
+    img : awpak_rs::io::request::request_body::FileData,
     #[body_param]
     param_1 : String,
     #[body_param]
@@ -135,7 +135,7 @@ fn post_multipart_data(
 #[post( url = "/post_multipart_data_optional_file" )]
 fn post_multipart_data_optional_file(
     #[part_file]
-    img : Option<awpak_rs::body::body::FileData>,
+    img : Option<awpak_rs::io::request::request_body::FileData>,
     #[body_param]
     param_1 : String,
     #[body_param]
@@ -151,9 +151,9 @@ fn post_multipart_data_optional_file(
 #[post( url = "/post_multipart_data_two_optional_files" )]
 fn post_multipart_data_two_optional_files(
     #[part_file]
-    img_1 : Option<awpak_rs::body::body::FileData>,
+    img_1 : Option<awpak_rs::io::request::request_body::FileData>,
     #[part_file]
-    img_2 : Option<awpak_rs::body::body::FileData>,
+    img_2 : Option<awpak_rs::io::request::request_body::FileData>,
     #[body_param]
     param_1 : String,
     #[body_param]
@@ -172,7 +172,7 @@ fn post_multipart_data_two_optional_files(
 #[post( url = "/post_multipart_data_optional_vec_of_files" )]
 fn post_multipart_data_optional_vec_of_files(
     #[part_file]
-    img : Option<Vec<awpak_rs::body::body::FileData>>,
+    img : Option<Vec<awpak_rs::io::request::request_body::FileData>>,
     #[body_param]
     param_1 : String,
     #[body_param]

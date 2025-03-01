@@ -104,7 +104,7 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 name = "awpak-rs"
 version = "0.0.1"
 dependencies = [
- "awpak-rs-macros 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "awpak-rs-macros",
  "cookie",
  "criterion",
  "futures",
@@ -123,43 +123,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "awpak-rs"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202e97749d08359e74a3a4ab4eac8d005b6186d1b9e0ba2940c9c53c1c4ee258"
-dependencies = [
- "awpak-rs-macros 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cookie",
- "futures",
- "http-body-util",
- "hyper",
- "hyper-util",
- "inventory",
- "multer",
- "regex",
- "serde",
- "serde_json",
- "serde_qs",
- "serde_urlencoded",
- "strategy-pattern-rs",
- "tokio",
-]
-
-[[package]]
 name = "awpak-rs-macros"
 version = "0.0.1"
-dependencies = [
- "darling",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "awpak-rs-macros"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d6ddf7c5a6ea9847f379f7deb44f75444ea5750bddb6735fbb0720850c66b7"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -171,7 +136,7 @@ dependencies = [
 name = "awpak-rs-test"
 version = "0.1.0"
 dependencies = [
- "awpak-rs 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "awpak-rs",
  "cucumber",
  "futures",
  "reqwest",

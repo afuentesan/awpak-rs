@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# awpak-rs = { path = "../awpak-rs" }
-awpak-rs = "0.0.1"
+awpak-rs = { path = "../awpak-rs" }
+# awpak-rs = "0.0.1"
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
