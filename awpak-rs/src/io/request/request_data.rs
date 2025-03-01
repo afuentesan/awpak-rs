@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{body::body::BodyData, io::{cookies::cookies::Cookies, headers::headers::Headers}};
+use crate::io::{cookies::cookies::Cookies, headers::headers::Headers};
+
+use super::body::BodyData;
 
 /// Represents an incoming HTTP request.
 ///

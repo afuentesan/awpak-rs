@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 use http_body_util::BodyExt as _;
 use hyper::header::{HeaderName, HeaderValue, ACCEPT, CONTENT_TYPE};
 
-use crate::{body::body::BodyData, io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::request_data::{RequestData, Uri}}, ContentTypeStrategy};
+use crate::{io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{body::BodyData, request_data::{RequestData, Uri}}}, ContentTypeStrategy};
 
 use super::multipart::get_body_from_multipart;
 

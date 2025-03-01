@@ -9,7 +9,6 @@ mod services;
 pub mod server;
 pub mod io;
 pub mod endpoint;
-pub mod body;
 mod parser;
 
 pub use awpak_rs_macros::*;

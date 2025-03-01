@@ -6,7 +6,7 @@ use hyper::body::{Bytes, Incoming};
 use multer::{Field, Multipart};
 use serde_json::{Map, Value};
 
-use crate::{body::body::{BodyData, FileData}, ContentTypeStrategy};
+use crate::{io::request::body::{BodyData, FileData}, ContentTypeStrategy};
 
 use super::service_request::REQUEST_MIME_TYPES_AVAILABLES;
 
