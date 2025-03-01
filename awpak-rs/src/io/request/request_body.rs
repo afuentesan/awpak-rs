@@ -25,7 +25,7 @@ impl FileData
 /// Represents the body of an HTTP request.
 ///
 /// The body can contain structured JSON data or uploaded files, depending on the request's content type.
-pub struct BodyData
+pub struct RequestBody
 {
     /// The JSON payload of the request body, if applicable.
     ///
@@ -34,9 +34,9 @@ pub struct BodyData
     ///
     /// # Example: Reading JSON data
     /// ```rust
-    /// use awpak_rs::body::body::BodyData;
+    /// use awpak_rs::io::request::request_body::RequestBody;
     /// 
-    /// let body_data = BodyData { value : None, files : vec![] };
+    /// let body_data = RequestBody { value : None, files : vec![] };
     /// 
     /// if let Some(json_value) = &body_data.value {
     ///     println!("Received JSON: {}", json_value);
@@ -45,9 +45,9 @@ pub struct BodyData
     ///
     /// # Example: Modifying JSON data
     /// ```rust
-    /// use awpak_rs::body::body::BodyData;
+    /// use awpak_rs::io::request::request_body::RequestBody;
     /// 
-    /// let mut body_data = BodyData { value : None, files : vec![] };
+    /// let mut body_data = RequestBody { value : None, files : vec![] };
     /// 
     /// if let Some(json_value) = &mut body_data.value {
     ///     json_value["new_key"] = serde_json::json!("new_value");
@@ -57,7 +57,7 @@ pub struct BodyData
     pub files : Vec<FileData>
 }
 
-impl BodyData
+impl RequestBody
 {
     pub fn get_param( &self, name : &str ) -> Option<&serde_json::Value>
     {
@@ -114,12 +114,12 @@ impl BodyData
 
 pub trait ToFileData
 {
-    fn to_file_data( body : &BodyData, name : &str  ) -> Result<Self, ()> where Self: Sized;    
+    fn to_file_data( body : &RequestBody, name : &str  ) -> Result<Self, ()> where Self: Sized;    
 }
 
 impl ToFileData for FileData
 {
-    fn to_file_data( body : &BodyData, name : &str ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &RequestBody, name : &str ) -> Result<Self, ()> where Self: Sized
     {
         match body.get_file( name ) {
             Some( f ) => Ok( f ),
@@ -130,7 +130,7 @@ impl ToFileData for FileData
 
 impl ToFileData for Vec<FileData>
 {
-    fn to_file_data( body : &BodyData, name : &str ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &RequestBody, name : &str ) -> Result<Self, ()> where Self: Sized
     {
         match body.get_files( name ) {
             Some( f ) => Ok( f ),
@@ -142,7 +142,7 @@ impl ToFileData for Vec<FileData>
 impl<T> ToFileData for Option<T>
 where T: ToFileData
 {
-    fn to_file_data( body : &BodyData, name : &str  ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &RequestBody, name : &str  ) -> Result<Self, ()> where Self: Sized
     {
         match T::to_file_data( body, name )
         {

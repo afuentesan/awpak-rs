@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 use http_body_util::BodyExt as _;
 use hyper::header::{HeaderName, HeaderValue, ACCEPT, CONTENT_TYPE};
 
-use crate::{io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{body::BodyData, request_data::{RequestData, Uri}}}, ContentTypeStrategy};
+use crate::{io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{request_body::RequestBody, request_data::{RequestData, Uri}}}, ContentTypeStrategy};
 
 use super::multipart::get_body_from_multipart;
 
@@ -47,7 +47,7 @@ fn get_cookies( parts : &hyper::http::request::Parts ) -> Cookies
     cookies
 }
 
-async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : Option<String> ) -> Result<BodyData, hyper::Error>
+async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : Option<String> ) -> Result<RequestBody, hyper::Error>
 {
     if boundary.is_some()
     {
@@ -58,7 +58,7 @@ async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : 
             {
                 eprintln!( "{}", e );
 
-                Ok( BodyData { value: None, files: vec![] } )
+                Ok( RequestBody { value: None, files: vec![] } )
             }
         }
     }
@@ -98,7 +98,7 @@ async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : 
     };
 
     Ok( 
-        BodyData
+        RequestBody
         {
             value,
             files : vec![]

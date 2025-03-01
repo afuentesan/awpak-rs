@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::io::{cookies::cookies::Cookies, headers::headers::Headers};
 
-use super::body::BodyData;
+use super::request_body::RequestBody;
 
 /// Represents an incoming HTTP request.
 ///
@@ -81,7 +81,7 @@ pub struct RequestData
     ///     println!("Received file: {}", file.filename);
     /// }
     /// ```
-    pub body : BodyData,
+    pub body : RequestBody,
 
     /// The cookies included in the request.
     ///
@@ -210,7 +210,7 @@ impl Default for Uri
 
 impl RequestData
 {
-    pub fn new( uri : Uri, method : String, headers : Headers, cookies : Cookies, body : BodyData ) -> Self
+    pub fn new( uri : Uri, method : String, headers : Headers, cookies : Cookies, body : RequestBody ) -> Self
     {
         Self
         {
@@ -242,7 +242,7 @@ impl Default for RequestData
             uri : Uri::default(),
             method : "get".to_string(),
             headers : Headers::new(),
-            body : BodyData { value : None, files : vec![] },
+            body : RequestBody { value : None, files : vec![] },
             cookies : Cookies::new()
         }
     }

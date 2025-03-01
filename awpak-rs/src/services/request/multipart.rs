@@ -6,16 +6,16 @@ use hyper::body::{Bytes, Incoming};
 use multer::{Field, Multipart};
 use serde_json::{Map, Value};
 
-use crate::{io::request::body::{BodyData, FileData}, ContentTypeStrategy};
+use crate::{io::request::request_body::{RequestBody, FileData}, ContentTypeStrategy};
 
 use super::service_request::REQUEST_MIME_TYPES_AVAILABLES;
 
 // Process the request body as multipart/form-data.
-pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> multer::Result<BodyData>
+pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> multer::Result<RequestBody>
 {  
     let mut multipart = get_multipart( body, boundary );
 
-    let mut body_data = BodyData { value : Some( Value::Object( Map::new() ) ), files : vec![] };
+    let mut body_data = RequestBody { value : Some( Value::Object( Map::new() ) ), files : vec![] };
 
     // Iterate over the fields, `next_field` method will return the next field if
     // available.
@@ -35,7 +35,7 @@ fn get_multipart<'a>( body: Incoming, boundary: String ) -> Multipart<'a>
     Multipart::new( body_stream, boundary )
 }
 
-async fn process_part( field : Field<'_>, body_data : &mut BodyData )
+async fn process_part( field : Field<'_>, body_data : &mut RequestBody )
 {
     if is_file( &field )
     {
@@ -47,7 +47,7 @@ async fn process_part( field : Field<'_>, body_data : &mut BodyData )
     }
 }
 
-async fn process_part_as_file( field : Field<'_>, body_data : &mut BodyData )
+async fn process_part_as_file( field : Field<'_>, body_data : &mut RequestBody )
 {
     let name = match field.name() {
         Some( v ) => v.to_string(),
@@ -75,7 +75,7 @@ async fn process_part_as_file( field : Field<'_>, body_data : &mut BodyData )
     );
 }
 
-async fn process_part_as_json( field : Field<'_>, body_data : &mut BodyData )
+async fn process_part_as_json( field : Field<'_>, body_data : &mut RequestBody )
 {
     let name = field.name();
 
