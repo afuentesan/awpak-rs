@@ -85,6 +85,8 @@ mod tests
     #[test]
     fn test_get_home_path_from_var()
     {
+        env::set_var( HOME_VAR, "" );
+
         assert!( get_home_path_from_var().is_err() );
 
         env::set_var( HOME_VAR, "/tmp" );
@@ -107,6 +109,8 @@ mod tests
     #[test]
     fn test_get_home_path()
     {
+        env::set_var( HOME_VAR, "" );
+        
         assert!( get_home_path().is_ok() );
 
         assert_ne!( get_home_path().unwrap(), "/tmp" );
