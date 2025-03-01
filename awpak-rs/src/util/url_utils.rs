@@ -1,4 +1,4 @@
-use crate::Error;
+use crate::error::error::Error;
 
 
 pub fn normalize_url( url : &str ) -> String

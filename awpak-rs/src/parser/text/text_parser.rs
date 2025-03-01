@@ -1,6 +1,6 @@
 use hyper::body::Bytes;
 use strategy_pattern_rs::strategy_pattern_fn;
-use crate::{Error, ContentTypeStrategy, ResponseContentTypeStrategy};
+use crate::{error::error::Error, ContentTypeStrategy, ResponseContentTypeStrategy};
 
 #[strategy_pattern_fn( key = "text/plain", strategy = ContentTypeStrategy )]
 pub fn text_parser( bytes : Bytes ) -> Result<serde_json::Value, Error>

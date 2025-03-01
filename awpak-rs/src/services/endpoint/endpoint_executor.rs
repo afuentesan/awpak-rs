@@ -1,6 +1,6 @@
 use std::future::IntoFuture as _;
 
-use crate::{endpoint::{endpoint::Endpoint, types::EndpointReturnType}, io::io::IO, services::error::Error, util::url_utils::{get_regex, normalize_url}};
+use crate::{endpoint::{endpoint::Endpoint, types::EndpointReturnType}, io::io::IO, error::error::Error, util::url_utils::{get_regex, normalize_url}};
 
 pub async fn endpoint_exec( io : IO ) -> Result<IO, Error>
 {

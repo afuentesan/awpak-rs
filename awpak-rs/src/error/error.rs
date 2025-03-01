@@ -5,7 +5,8 @@ pub enum Error
     EndpointNotFound( String ),
     EndpointExecution( String ),
     ParserError( String ),
-    RegexError( String )
+    RegexError( String ),
+    HomePathNotFound( String )
 }
 
 impl Error
