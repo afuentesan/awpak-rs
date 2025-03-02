@@ -1,4 +1,4 @@
-use impls::{awpak_main::awpak_main_impl, from_value::from_value_impl, methods::{connect::connect_impl, delete::delete_impl, get::get_impl, head::head_impl, options::options_impl, patch::patch_impl, post::post_impl, put::put_impl, trace::trace_impl}, middleware::middleware_impl, redirect_to::redirect_to_impl, set_status_code::set_status_code_impl};
+use impls::{awpak_main::awpak_main_impl, config_file::config_file_impl, from_value::from_value_impl, methods::{connect::connect_impl, delete::delete_impl, get::get_impl, head::head_impl, options::options_impl, patch::patch_impl, post::post_impl, put::put_impl, trace::trace_impl}, middleware::middleware_impl, redirect_to::redirect_to_impl, set_status_code::set_status_code_impl};
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -745,4 +745,10 @@ pub fn set_status_code( item : TokenStream ) -> TokenStream
 pub fn redirect_to( item : TokenStream ) -> TokenStream
 {
     redirect_to_impl( item )
+}
+
+#[proc_macro_attribute]
+pub fn config_file( args: TokenStream, item: TokenStream ) -> TokenStream
+{
+    config_file_impl( args, item )
 }

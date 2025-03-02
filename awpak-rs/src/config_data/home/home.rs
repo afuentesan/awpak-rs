@@ -9,14 +9,14 @@ pub fn get_home_path() -> Result<String, Error>
 {
     match get_home_path_from_var()
     {
-        Ok( d ) => Ok( d ),
+        Ok( d ) => Ok( normalize_path( d ) ),
         Err( e_var ) =>
         {
             eprintln!( "{:?}", e_var );
 
             match get_default_home_path()
             {
-                Ok( d ) => Ok( d ),
+                Ok( d ) => Ok( normalize_path( d ) ),
                 Err( e_default ) =>
                 {
                     eprintln!( "{:?}", e_default );
@@ -27,6 +27,16 @@ pub fn get_home_path() -> Result<String, Error>
         }
     }
     
+}
+
+fn normalize_path( mut path : String ) -> String
+{
+    while path.ends_with( std::path::MAIN_SEPARATOR_STR )
+    {
+        path = path[ 0..path.len() - 1 ].to_string();
+    }
+    
+    format!( "{}{}", path, std::path::MAIN_SEPARATOR_STR )
 }
 
 fn get_home_path_from_var() -> Result<String, Error>
@@ -113,12 +123,32 @@ mod tests
         
         assert!( get_home_path().is_ok() );
 
-        assert_ne!( get_home_path().unwrap(), "/tmp" );
+        assert!( get_home_path().unwrap().ends_with( "/" ) );
+
+        assert_ne!( get_home_path().unwrap(), "/tmp/" );
 
         env::set_var( HOME_VAR, "/tmp" );
 
         assert!( get_home_path().is_ok() );
 
-        assert_eq!( get_home_path().unwrap(), "/tmp" );
+        assert!( get_home_path().unwrap().ends_with( "/" ) );
+
+        assert_eq!( get_home_path().unwrap(), "/tmp/" );
+
+        env::set_var( HOME_VAR, "/" );
+
+        assert!( get_home_path().is_ok() );
+
+        assert!( get_home_path().unwrap().ends_with( "/" ) );
+
+        assert_eq!( get_home_path().unwrap(), "/" );
+
+        env::set_var( HOME_VAR, "/tmp/////////" );
+
+        assert!( get_home_path().is_ok() );
+
+        assert!( get_home_path().unwrap().ends_with( "/" ) );
+
+        assert_eq!( get_home_path().unwrap(), "/tmp/" );
     }
 }

@@ -6,7 +6,8 @@ pub enum Error
     EndpointExecution( String ),
     ParserError( String ),
     RegexError( String ),
-    HomePathNotFound( String )
+    HomePathNotFound( String ),
+    FileNotFound( String )
 }
 
 impl Error
