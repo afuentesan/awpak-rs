@@ -71,6 +71,8 @@ pub fn awpak_main_impl( args: TokenStream, item: TokenStream ) -> TokenStream
 
     let server_statement = get_server_statement( args );
 
+    let init_home_path = quote! { println!( "Awpak-rs home: {}",  awpak_rs::config_data::home::home::get_home_path() ); };
+    let load_config_files = quote! { awpak_rs::config_data::config_file::config_file::load_config_files(); };
     let initialize_middlewares = quote! { awpak_rs::initialize_middlewares(); };
 
     quote! {
@@ -80,6 +82,10 @@ pub fn awpak_main_impl( args: TokenStream, item: TokenStream ) -> TokenStream
         #macros
         #signature
         {
+            #init_home_path
+
+            #load_config_files
+
             #initialize_middlewares
             
             #(#statements)*

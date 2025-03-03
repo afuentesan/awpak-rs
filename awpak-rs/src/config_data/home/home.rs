@@ -1,11 +1,18 @@
 use std::env;
 use std::path::Path;
+use std::sync::OnceLock;
 
 use crate::error::error::Error;
 
-pub const HOME_VAR : &'static str = "AWPAK_RS_HOME";
+const HOME_VAR : &'static str = "AWPAK_RS_HOME";
 
-pub fn get_home_path() -> Result<String, Error> 
+pub fn get_home_path() -> &'static String
+{
+    static AWPAK_RS_HOME_PATH : OnceLock<String> = OnceLock::new();
+    AWPAK_RS_HOME_PATH.get_or_init(|| get_init_home_path().unwrap() )
+}
+
+fn get_init_home_path() -> Result<String, Error> 
 {
     match get_home_path_from_var()
     {
@@ -92,7 +99,7 @@ mod tests
         assert!( ! dir_exists( "/tmp/foo.txt" ) );
     }
 
-    #[test]
+    // #[test]
     fn test_get_home_path_from_var()
     {
         env::set_var( HOME_VAR, "" );
@@ -116,39 +123,47 @@ mod tests
         assert!( get_default_home_path().is_ok() );
     }
 
-    #[test]
-    fn test_get_home_path()
+    // #[test]
+    fn test_get_init_home_path()
     {
         env::set_var( HOME_VAR, "" );
         
-        assert!( get_home_path().is_ok() );
+        assert!( get_init_home_path().is_ok() );
 
-        assert!( get_home_path().unwrap().ends_with( "/" ) );
+        assert!( get_init_home_path().unwrap().ends_with( "/" ) );
 
-        assert_ne!( get_home_path().unwrap(), "/tmp/" );
+        assert_ne!( get_init_home_path().unwrap(), "/tmp/" );
 
         env::set_var( HOME_VAR, "/tmp" );
 
-        assert!( get_home_path().is_ok() );
+        assert!( get_init_home_path().is_ok() );
 
-        assert!( get_home_path().unwrap().ends_with( "/" ) );
+        assert!( get_init_home_path().unwrap().ends_with( "/" ) );
 
-        assert_eq!( get_home_path().unwrap(), "/tmp/" );
+        assert_eq!( get_init_home_path().unwrap(), "/tmp/" );
 
         env::set_var( HOME_VAR, "/" );
 
-        assert!( get_home_path().is_ok() );
+        assert!( get_init_home_path().is_ok() );
 
-        assert!( get_home_path().unwrap().ends_with( "/" ) );
+        assert!( get_init_home_path().unwrap().ends_with( "/" ) );
 
-        assert_eq!( get_home_path().unwrap(), "/" );
+        assert_eq!( get_init_home_path().unwrap(), "/" );
 
         env::set_var( HOME_VAR, "/tmp/////////" );
 
-        assert!( get_home_path().is_ok() );
+        assert!( get_init_home_path().is_ok() );
 
-        assert!( get_home_path().unwrap().ends_with( "/" ) );
+        assert!( get_init_home_path().unwrap().ends_with( "/" ) );
 
-        assert_eq!( get_home_path().unwrap(), "/tmp/" );
+        assert_eq!( get_init_home_path().unwrap(), "/tmp/" );
+    }
+
+    #[test]
+    fn test_envs()
+    {
+        test_get_home_path_from_var();
+        test_get_init_home_path();
+
     }
 }

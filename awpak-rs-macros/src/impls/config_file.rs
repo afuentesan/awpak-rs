@@ -26,6 +26,8 @@ pub fn config_file_impl( args : TokenStream, item : TokenStream ) -> TokenStream
     let static_fn = get_static_fn( &item_struct, &fn_name, &return_type, get_path( &config_file_data ) );
     let struct_impl = get_struct_impl( &item_struct, &fn_name, &return_type );
 
+    let inventory = get_inventory( &fn_name );
+
     quote!
     {
         #item_struct
@@ -33,6 +35,8 @@ pub fn config_file_impl( args : TokenStream, item : TokenStream ) -> TokenStream
         #static_fn
 
         #struct_impl
+
+        #inventory
 
     }.into()
 }
@@ -106,4 +110,18 @@ fn get_path( config : &MacroConfigFile ) -> String
     }
 
     path
+}
+
+fn get_inventory( fn_name : &syn::Ident ) -> proc_macro2::TokenStream
+{
+    quote!
+    {
+        awpak_rs::inventory::submit! {
+            awpak_rs::config_data::config_file::config_file::InitConfigFile
+            {
+                fnc : || { let _ = #fn_name(); }
+            }
+        }
+    }
+    
 }

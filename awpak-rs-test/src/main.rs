@@ -1,7 +1,4 @@
-use std::sync::OnceLock;
-
-// use awpak_rs_macros::{awpak_main, body_param, get, part_file, part_files, post, query_params, request_body, FromValue};
-use awpak_rs::{awpak_main, body_param, config_file, get, part_file, part_files, post, query_params, request_body, FromValue};
+use awpak_rs::{awpak_main, body_param, get, part_file, part_files, post, query_params, request_body, FromValue};
 use serde::{Deserialize, Serialize};
 
 mod middlewares;
@@ -12,37 +9,13 @@ mod cookies;
 mod status_code;
 mod query_param;
 mod redirects;
-
-
-
-#[config_file( path="tests/files/config/config_1.json" )]
-#[derive(Deserialize)]
-pub struct DbConfigFile
-{
-    pub db_user : String,
-    pub db_password : String
-}
-
-#[config_file( path="tests/files/config/config_1.json" )]
-pub struct DbConfigFileValue;
+mod config_files;
 
 #[awpak_main( 
     ip = "127.0.0.1", 
     port = "3001"
 )]
-fn main() {
-    let config = DbConfigFile::get_config_file();
-
-    let config_value = DbConfigFileValue::get_config_file();
-
-    println!( "db_username: {}, db_password: {}", config.db_user, config.db_password );
-
-    println!( 
-        "db_user_value: {}, db_password_value: {}", 
-        config_value.get( "db_user" ).unwrap().as_str().unwrap(),
-        config_value.get( "db_password" ).unwrap().as_str().unwrap()
-    );
-}
+fn main() {}
 
 #[derive(Serialize, Deserialize, FromValue)]
 struct Point3D

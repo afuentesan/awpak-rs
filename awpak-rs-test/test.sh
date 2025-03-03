@@ -26,6 +26,7 @@ cargo test --test test_status_code
 cargo test --test test_query_param
 cargo test --test test_get_2
 cargo test --test test_redirects
+cargo test --test test_config_files
 fi
 
 kill $PID_SERVER
