@@ -6,3 +6,6 @@ Feature: Config files feature
 
     When I call /get_db_config_file_user_pass_value
     Then response="user2:pass2"
+
+    When I call /get_db_config_file_user_pass_env_vars
+    Then response="db_user_env_var:db_password_env_var"

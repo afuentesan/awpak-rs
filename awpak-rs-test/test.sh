@@ -1,6 +1,9 @@
+export db_user="db_user_env_var"
+export db_password="db_password_env_var"
+
 cargo build
 
-cargo run > /tmp/salida_server 2>&1 & 
+cargo run > /tmp/salida_server 2>&1 &
 
 PID_SERVER=$!
 
