@@ -747,6 +747,61 @@ pub fn redirect_to( item : TokenStream ) -> TokenStream
     redirect_to_impl( item )
 }
 
+/// Macro for loading configuration from a JSON file.
+///
+/// The `config_file` macro allows defining a struct that automatically loads configuration data
+/// from a JSON file at runtime. The path to the configuration file is specified using the `path` parameter.
+///
+/// The file path is relative to the application's home directory, which can be set using the
+/// `AWPAK_RS_HOME` environment variable. If `AWPAK_RS_HOME` is not set, the home directory defaults
+/// to the current working directory.
+///
+/// # Usage
+///
+/// The macro must be applied to a struct, which can either define fields explicitly (requiring `#[derive(Deserialize)]`)
+/// or be left empty to store the configuration as a `serde_json::Value`.
+///
+/// ## Example: Defining a Typed Configuration Struct
+/// ```ignore
+/// #[config_file(path="config/db_config.json")]
+/// #[derive(Deserialize)]
+/// struct DbConfig {
+///     db_user: String,
+///     db_password: String,
+/// }
+///
+/// // Access the configuration from anywhere in the application:
+/// let db_user = DbConfig::get_config_file().db_user;
+/// ```
+///
+/// ## Example: Using a Dynamic JSON Configuration
+/// ```ignore
+/// #[config_file(path="config/db_config.json")]
+/// struct DbConfigValue;
+///
+/// let json = DbConfigValue::get_config_file();
+/// let db_user = json.get("db_user").unwrap().as_str().unwrap();
+/// ```
+///
+/// ## Environment Variables in Config Files
+///
+/// The configuration file can contain placeholders for environment variables,
+/// which will be replaced at runtime. Example JSON file:
+///
+/// ```json
+/// {
+///     "db_user": "{DB_USER}",
+///     "db_password": "{DB_PASSWORD}"
+/// }
+/// ```
+///
+/// If the environment variables are set as follows:
+/// ```sh
+/// export DB_USER=admin
+/// export DB_PASSWORD=1234
+/// ```
+/// Then `DbConfig::get_config_file().db_user` will return `"admin"`, and
+/// `DbConfig::get_config_file().db_password` will return `"1234"`.
 #[proc_macro_attribute]
 pub fn config_file( args: TokenStream, item: TokenStream ) -> TokenStream
 {
