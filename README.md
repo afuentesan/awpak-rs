@@ -242,6 +242,26 @@ Awpak-rs supports the following HTTP methods:
 - `#[trace]`
 - `#[connect]`
 
+## Asynchronous Execution
+
+All endpoint functions and middlewares in `awpak-rs` are executed asynchronously. There is no need to manually mark functions with `async`, as the macros automatically handle this.
+
+This means you can use `await` inside any function annotated with an endpoint macro (such as `#[get]`, `#[post]`, etc.) or inside a middleware function.
+
+### Example: Using `await` in an Endpoint
+
+```rust
+async fn fetch_data() -> String {
+    awpak_rs::tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    "Data loaded".to_string()
+}
+
+#[get(url = "/async-example")]
+fn async_example() -> String {
+    fetch_data().await
+}
+```
+
 ## License
 Awpak-rs is released under the MIT License.
 
