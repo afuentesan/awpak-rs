@@ -21,15 +21,16 @@ pub use services::middleware::middleware::initialize_middlewares;
 pub use services::middleware::middleware::Middleware;
 pub use services::middleware::middleware::MiddlewareExecOrder;
 
-pub use parser::parser::parse_value;
-pub use parser::parser::parse_from_value;
-pub use parser::parser::parse_body_param_value;
+pub use parser::parser::parse_body_with_io;
+pub use parser::parser::parse_body_param_with_io;
+pub use parser::parser::parse_query_with_io;
+pub use parser::parser::parse_query_param_with_io;
+pub use parser::parser::parse_bytes_with_io;
 pub use parser::parser::serialize_value;
 pub use parser::parser::parse_path_variable;
-pub use parser::parser::parse_query_param_value;
-pub use parser::from_value::from_value;
 pub use parser::from_async_str::from_async_str;
 pub use serde_json::Value;
+pub use serde_json::value::RawValue;
 
 #[strategy_pattern_type( search = "IgnoreCase" )]
 pub struct ContentTypeStrategy(fn( Bytes ) -> Result<serde_json::Value, error::error::Error>);

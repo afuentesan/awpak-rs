@@ -1,4 +1,4 @@
-use impls::{awpak_main::awpak_main_impl, config_file::config_file_impl, from_value::from_value_impl, methods::{connect::connect_impl, delete::delete_impl, get::get_impl, head::head_impl, options::options_impl, patch::patch_impl, post::post_impl, put::put_impl, trace::trace_impl}, middleware::middleware_impl, redirect_to::redirect_to_impl, set_status_code::set_status_code_impl};
+use impls::{awpak_main::awpak_main_impl, config_file::config_file_impl, deserialize_with_io::deserialize_with_io_impl, methods::{connect::connect_impl, delete::delete_impl, get::get_impl, head::head_impl, options::options_impl, patch::patch_impl, post::post_impl, put::put_impl, trace::trace_impl}, middleware::middleware_impl, redirect_to::redirect_to_impl, set_status_code::set_status_code_impl};
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -636,39 +636,6 @@ pub fn query_param( _args : TokenStream ) -> TokenStream
     quote! {}.into()
 }
 
-/// Derive macro for implementing `FromValue`.
-///
-/// This macro automatically generates an implementation of the `FromValue` trait,
-/// allowing a struct to be deserialized from query parameters, request bodies, or
-/// other extracted values.
-///
-/// # Usage
-///
-/// This derive macro is used for structs that need to be deserialized using
-/// `query_param`, `query_params`, `request_body`, or `body_param`. It works alongside
-/// `serde`'s `Deserialize` trait.
-///
-/// # Example
-///
-/// ```ignore
-/// use awpak_rs::FromValue;
-/// use serde::Deserialize;
-///
-/// #[derive(Deserialize, FromValue)]
-/// struct User {
-///     id: u32,
-///     name: String,
-/// }
-/// ```
-///
-/// Now, `User` can be used with `#[query_param]`, `#[query_params]`, `#[request_body]`, or `#[body_param]`
-/// to automatically deserialize values from the request.
-#[proc_macro_derive(FromValue)]
-pub fn derive_from_value( item : TokenStream ) -> TokenStream
-{
-    from_value_impl( item )
-}
-
 /// Defines a middleware function in `awpak-rs`.
 ///
 /// Middleware functions allow modifying incoming requests, responses, or setting a shared context
@@ -807,3 +774,13 @@ pub fn config_file( args: TokenStream, item: TokenStream ) -> TokenStream
 {
     config_file_impl( args, item )
 }
+
+#[proc_macro_derive(DeserializeWithIO, attributes(io_deserializer))]
+pub fn derive_deserialize_with_io( input : TokenStream ) -> TokenStream
+{
+    deserialize_with_io_impl( input )
+}
+
+
+
+

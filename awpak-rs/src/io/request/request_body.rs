@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 
 #[derive(Clone)]
 pub struct FileData
@@ -36,9 +38,9 @@ pub struct RequestBody
     /// ```rust
     /// use awpak_rs::io::request::request_body::RequestBody;
     /// 
-    /// let body_data = RequestBody { value : None, files : vec![] };
+    /// let request_body = RequestBody { value : None, files : vec![] };
     /// 
-    /// if let Some(json_value) = &body_data.value {
+    /// if let Some(json_value) = &request_body.value {
     ///     println!("Received JSON: {}", json_value);
     /// }
     /// ```
@@ -47,14 +49,15 @@ pub struct RequestBody
     /// ```rust
     /// use awpak_rs::io::request::request_body::RequestBody;
     /// 
-    /// let mut body_data = RequestBody { value : None, files : vec![] };
+    /// let mut request_body = RequestBody { value : None, files : vec![] };
     /// 
-    /// if let Some(json_value) = &mut body_data.value {
+    /// if let Some(json_value) = &mut request_body.value {
     ///     json_value["new_key"] = serde_json::json!("new_value");
     /// }
     /// ```
     pub value : Option<serde_json::Value>,
-    pub files : Vec<FileData>
+    pub files : Vec<FileData>,
+    pub data : Arc<Box<[u8]>>
 }
 
 impl RequestBody
@@ -109,6 +112,19 @@ impl RequestBody
         }
         
         Some( ret )
+    }
+}
+
+impl Default for RequestBody
+{
+    fn default() -> Self
+    {
+        Self
+        {
+            value : Default::default(), 
+            files : Default::default(), 
+            data : Default::default() 
+        }
     }
 }
 

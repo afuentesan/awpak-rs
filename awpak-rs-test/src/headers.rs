@@ -56,7 +56,7 @@ fn post_echo_request_header_add_one(
             Some( val ) => {
                 match val.parse::<usize>()
                 {
-                    Ok( n ) => { headers.replace_header( name.clone(), ( n + 1 ).to_string() ); },
+                    Ok( n ) => { headers.replace_header( name.to_string(), ( n + 1 ).to_string() ); },
                     _ => {}    
                 };
             },

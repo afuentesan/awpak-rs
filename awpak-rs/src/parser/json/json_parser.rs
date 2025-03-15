@@ -7,7 +7,11 @@ pub fn json_parser( bytes : Bytes ) -> Result<serde_json::Value, Error>
 {
     match serde_json::from_slice::<serde_json::Value>( &bytes ) {
         Ok( v ) => Ok( v ),
-        _ => Err( Error::ParserError( "Invalid json".to_string() ) )
+        _ => {
+            let s = String::from_utf8( bytes.to_vec() ).map_err( | e | Error::ParserError( e.to_string() ) )?;
+
+            Ok( serde_json::Value::String( s ) )
+        }
     }
 }
 

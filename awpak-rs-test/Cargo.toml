@@ -7,6 +7,8 @@ edition = "2021"
 awpak-rs = { path = "../awpak-rs" }
 # awpak-rs = "0.0.1"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.138", features = ["raw_value"] }
+serde_qs = "0.14.0"
 
 [dev-dependencies]
 cucumber = "0.21.1"

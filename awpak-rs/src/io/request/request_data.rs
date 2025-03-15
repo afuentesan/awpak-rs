@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 
-use crate::io::{cookies::cookies::Cookies, headers::headers::Headers};
+use crate::{error::error::Error, io::{cookies::cookies::Cookies, deserializer::deserialize_with_io::DeserializeWithIO, headers::headers::Headers, io::IO}};
 
 use super::request_body::RequestBody;
 
@@ -134,6 +134,7 @@ pub struct Uri
     pub path : String,
     pub query : Option<String>,
     pub query_map : Option<HashMap<String, String>>,
+    pub query_data : Arc<Box<[u8]>>,
     pub port : Option<u16>,
     pub scheme : Option<String>
 }
@@ -162,15 +163,58 @@ impl Uri
         
         let query_map = Self::get_query_map( &query );
 
+        let query_data = Self::get_query_bytes( &query );
+
         Self
         {
             host,
             path,
             query,
             query_map,
+            query_data,
             port,
             scheme
         }
+    }
+
+    fn get_query_bytes( query : &Option<String> ) -> Arc<Box<[u8]>>
+    {
+        match query
+        {
+            Some( s ) =>
+            {
+                match serde_json::to_value( 
+                    match serde_qs::from_str::<HashMap<String, serde_json::Value>>( s )
+                    {
+                        Ok( v ) => v,
+                        _ => return Arc::default()
+                    }
+                )
+                {
+                    Ok( v ) => Arc::new(
+                        match v
+                        {
+                            serde_json::Value::String( s ) => s.as_bytes().into(),
+                            _ => v.to_string().as_bytes().into()
+                        }
+                    ),
+                    _ => Arc::default()
+                }
+            },
+            _ => Arc::default() 
+        }
+    }
+
+    pub fn get_data_from_query<T>( &self, io : Arc<Mutex<Option<IO>>> ) -> Result<T, Error>
+    where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
+    {
+        T::deserialize_with_io( self.query_data.clone(), io )
+    }
+
+    pub fn get_param_from_query<T>( &self, io : Arc<Mutex<Option<IO>>>, param : &str ) -> Result<T, Error>
+    where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
+    {
+        T::deserialize_param_with_io( self.query_data.clone(), io, param )
     }
 
     fn get_query_map( query : &Option<String> ) -> Option<HashMap<String, String>>
@@ -202,6 +246,7 @@ impl Default for Uri
             path : "/".to_string(),
             query : None,
             query_map : None,
+            query_data : Default::default(),
             port : None,
             scheme : None
         }
@@ -242,7 +287,7 @@ impl Default for RequestData
             uri : Uri::default(),
             method : "get".to_string(),
             headers : Headers::new(),
-            body : RequestBody { value : None, files : vec![] },
+            body : RequestBody::default(),
             cookies : Cookies::new()
         }
     }

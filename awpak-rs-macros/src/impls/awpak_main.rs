@@ -78,6 +78,17 @@ pub fn awpak_main_impl( args: TokenStream, item: TokenStream ) -> TokenStream
     quote! {
         #uses
 
+        // pub struct SeedContextDeserializer<'a>
+        // {
+        //     pub io : &'a awpak_rs::io::io::IO
+        // }
+
+        pub struct SeedContextDeserializer<T>
+        {
+            pub io : std::sync::Arc<std::sync::Mutex<Option<awpak_rs::io::io::IO>>>,
+            _phantom : std::marker::PhantomData<T>
+        }
+
         #(#attrs)*
         #macros
         #signature

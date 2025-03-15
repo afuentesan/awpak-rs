@@ -160,8 +160,6 @@ fn declare_variable_query_param(
     let optional_part = quote! {
         if #priv_pat_ident.is_none()
         {
-            println!( "Parse query param value err" );
-            
             return Err( awpak_rs::error::error::Error::ParserError( format!( "Query param error: {}", #name ) ) )
         }
     };
@@ -173,7 +171,7 @@ fn declare_variable_query_param(
     (
         quote! {
             #fake_attr!();
-            let #priv_pat_ident = awpak_rs::parse_query_param_value::<#ty>( &__io, #name );
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_param_with_io::<#ty>( __io, #name );
             #optional_part
             #final_assign
         },
@@ -354,7 +352,7 @@ fn declare_variable_body_param(
     (
         quote! {
             #fake_attr!();
-            let #priv_pat_ident = awpak_rs::parse_body_param_value::<#ty>( &__io, #name );
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_param_with_io::<#ty>( __io, #name );
             #optional_part
             #final_assign
         },
@@ -403,12 +401,26 @@ fn declare_variable_object(
 {
     let name = pat_ident.ident.to_string();
 
+    let assign = if from == "query_params"
+    {
+        quote!
+        {
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_with_io::<#ty>( __io );
+        }
+    }
+    else
+    {
+        quote!{
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_with_io::<#ty>( __io );
+        }
+    };
+
     (
         quote! {
 
             #fake_attr!();
 
-            let #priv_pat_ident = awpak_rs::parse_value::<#ty>( &__io, #from );
+            #assign
 
             if #priv_pat_ident.is_none()
             {

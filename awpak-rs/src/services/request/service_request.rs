@@ -1,10 +1,10 @@
 
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, sync::Arc};
 
 use http_body_util::BodyExt as _;
 use hyper::header::{HeaderName, HeaderValue, ACCEPT, CONTENT_TYPE};
 
-use crate::{io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{request_body::RequestBody, request_data::{RequestData, Uri}}}, ContentTypeStrategy};
+use crate::io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{request_body::RequestBody, request_data::{RequestData, Uri}}};
 
 use super::multipart::get_body_from_multipart;
 
@@ -25,7 +25,7 @@ pub async fn get_request_data( request : hyper::Request<hyper::body::Incoming> )
 
     let uri = get_uri( &parts );
 
-    let body = get_body( body, &headers, boundary ).await?;
+    let body = get_body( body, boundary ).await?;
 
     Ok( RequestData::new( uri, parts.method.to_string(), headers, cookies, body ) )
 }
@@ -47,7 +47,7 @@ fn get_cookies( parts : &hyper::http::request::Parts ) -> Cookies
     cookies
 }
 
-async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : Option<String> ) -> Result<RequestBody, hyper::Error>
+async fn get_body( body : hyper::body::Incoming, boundary : Option<String> ) -> Result<RequestBody, hyper::Error>
 {
     if boundary.is_some()
     {
@@ -58,74 +58,60 @@ async fn get_body( body : hyper::body::Incoming, headers : &Headers, boundary : 
             {
                 eprintln!( "{}", e );
 
-                Ok( RequestBody { value: None, files: vec![] } )
+                Ok( RequestBody::default() )
             }
         }
     }
 
-    let value = match body.collect().await
+    match body.collect().await
     {
         Ok( v ) =>
         {
-            let content_type = &get_content_type( headers.get( CONTENT_TYPE.as_str() ) );
+            let bytes = v.to_bytes().to_vec();
 
-            match ContentTypeStrategy::exec( content_type, v.to_bytes() )
-            {
-                Ok( v ) => match v
-                {
-                    Ok( v ) => Some( v ),
-                    Err( e ) => 
-                    {
-                        eprintln!( "{:?}", e );
+            let mut request_body = RequestBody::default();
 
-                        None
-                    }
-                },
-                Err( e ) =>
-                {
-                    eprintln!( "{}", e );
+            request_body.data = Arc::new( bytes.into() );
 
-                    None
-                }
-            }
+            Ok( request_body )
         },
         Err( e ) =>
         {
             eprintln!( "{}", e );
 
-            None
+            Ok( RequestBody::default() )
         }
-    };
-
-    Ok( 
-        RequestBody
-        {
-            value,
-            files : vec![]
-        }
-    )
-}
-
-pub const REQUEST_MIME_TYPES_AVAILABLES : &[&str] = &[ "text/plain", "application/json" ];
-
-pub fn get_content_type( header : Option<&HeaderData> ) -> String
-{
-    let content_type = match header
-    {
-        Some( v ) => match &v.value {
-            Some( v ) => v,
-            _ => REQUEST_MIME_TYPES_AVAILABLES[ 0 ]
-        },
-        _ => REQUEST_MIME_TYPES_AVAILABLES[ 0 ]
-    };
-
-    if REQUEST_MIME_TYPES_AVAILABLES.contains( &content_type )
-    {
-        return content_type.to_string()
     }
 
-    REQUEST_MIME_TYPES_AVAILABLES[ 0 ].to_string()
+    // let mut request_body = RequestBody::default();
+
+    // request_body.value = value;
+
+    // Ok( 
+    //     request_body
+    // )
 }
+
+pub const REQUEST_MIME_TYPES_AVAILABLES : &[&str] = &[ "application/json" ];
+
+// pub fn get_content_type( header : Option<&HeaderData> ) -> String
+// {
+//     let content_type = match header
+//     {
+//         Some( v ) => match &v.value {
+//             Some( v ) => v,
+//             _ => REQUEST_MIME_TYPES_AVAILABLES[ 0 ]
+//         },
+//         _ => REQUEST_MIME_TYPES_AVAILABLES[ 0 ]
+//     };
+
+//     if REQUEST_MIME_TYPES_AVAILABLES.contains( &content_type )
+//     {
+//         return content_type.to_string()
+//     }
+
+//     REQUEST_MIME_TYPES_AVAILABLES[ 0 ].to_string()
+// }
 
 fn get_uri( parts : &hyper::http::request::Parts ) -> Uri
 {

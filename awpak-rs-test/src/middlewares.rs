@@ -1,10 +1,10 @@
 use awpak_rs::{io::io::IO, MiddlewareResponse};
-use awpak_rs::{get, middleware, post, query_params, request_body, FromValue};
+use awpak_rs::{get, middleware, post, query_params, request_body, DeserializeWithIO};
 use serde::{Deserialize, Serialize};
 
 use crate::Point;
 
-#[derive(Serialize, Deserialize, FromValue)]
+#[derive(Serialize, Deserialize, DeserializeWithIO)]
 struct Point3DZOrder
 {
     x : f32,

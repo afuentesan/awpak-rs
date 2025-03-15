@@ -1,4 +1,4 @@
-use awpak_rs::{awpak_main, body_param, get, part_file, part_files, post, query_params, request_body, FromValue};
+use awpak_rs::{awpak_main, body_param, get, part_file, part_files, post, query_params, request_body, DeserializeWithIO};
 use serde::{Deserialize, Serialize};
 
 mod middlewares;
@@ -10,6 +10,7 @@ mod status_code;
 mod query_param;
 mod redirects;
 mod config_files;
+mod async_deserializer;
 
 #[awpak_main( 
     ip = "127.0.0.1", 
@@ -17,7 +18,7 @@ mod config_files;
 )]
 fn main() {}
 
-#[derive(Serialize, Deserialize, FromValue)]
+#[derive(Serialize, Deserialize, DeserializeWithIO)]
 struct Point3D
 {
     x : f32,
@@ -25,16 +26,23 @@ struct Point3D
     z : f32
 }
 
-#[derive(Serialize, Deserialize, FromValue)]
+#[derive(Serialize, Deserialize, DeserializeWithIO)]
 struct Point
 {
-    x : Option<f32>,
-    y : f32
+    pub x : Option<f32>,
+    pub y : f32
 }
 
 #[get( url = "/" )]
 fn get_zero() -> usize
 {
+    let a : Vec<&str> = vec![];
+
+    if a.contains( &"" )
+    {
+
+    }
+
     0
 }
 

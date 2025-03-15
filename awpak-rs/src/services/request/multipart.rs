@@ -1,4 +1,4 @@
-use std::str::FromStr as _;
+use std::{str::FromStr as _, sync::Arc};
 
 use futures::StreamExt as _;
 use http_body_util::BodyStream;
@@ -15,16 +15,26 @@ pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> mult
 {  
     let mut multipart = get_multipart( body, boundary );
 
-    let mut body_data = RequestBody { value : Some( Value::Object( Map::new() ) ), files : vec![] };
+    let mut request_body = RequestBody::default();
 
-    // Iterate over the fields, `next_field` method will return the next field if
-    // available.
-    while let Some(field) = multipart.next_field().await?
+    request_body.value = Some( Value::Object( Map::new() ) );
+
+    let mut value = Value::Object( Map::new() );
+
+    while let Some( field ) = multipart.next_field().await?
     {
-        process_part( field, &mut body_data ).await;
+        process_part( field, &mut request_body.files, &mut value ).await;
     }
 
-    Ok( body_data )
+    request_body.data = Arc::new( 
+        match serde_json::to_vec( &value )
+        {
+            Ok( b ) => b.into(),
+            _ => Box::new( [] )
+        }
+    );
+
+    Ok( request_body )
 }
 
 fn get_multipart<'a>( body: Incoming, boundary: String ) -> Multipart<'a>
@@ -35,19 +45,19 @@ fn get_multipart<'a>( body: Incoming, boundary: String ) -> Multipart<'a>
     Multipart::new( body_stream, boundary )
 }
 
-async fn process_part( field : Field<'_>, body_data : &mut RequestBody )
+async fn process_part( field : Field<'_>, files : &mut Vec<FileData>, value : &mut serde_json::Value )
 {
     if is_file( &field )
     {
-        process_part_as_file( field, body_data ).await;
+        process_part_as_file( field, files ).await;
     }
     else
     {
-        process_part_as_json( field, body_data ).await;
+        process_part_as_json( field, value ).await;
     }
 }
 
-async fn process_part_as_file( field : Field<'_>, body_data : &mut RequestBody )
+async fn process_part_as_file( field : Field<'_>, files : &mut Vec<FileData> )
 {
     let name = match field.name() {
         Some( v ) => v.to_string(),
@@ -70,12 +80,12 @@ async fn process_part_as_file( field : Field<'_>, body_data : &mut RequestBody )
 
     let bytes = bytes.unwrap().to_vec();
 
-    body_data.files.push(
+    files.push(
         FileData::new( name, filename, bytes, content_type )
     );
 }
 
-async fn process_part_as_json( field : Field<'_>, body_data : &mut RequestBody )
+async fn process_part_as_json( field : Field<'_>, value : &mut serde_json::Value )
 {
     let name = field.name();
 
@@ -98,7 +108,7 @@ async fn process_part_as_json( field : Field<'_>, body_data : &mut RequestBody )
 
         match Value::from_str( &text ) {
             Ok( v ) => { 
-                body_data.value.as_mut().unwrap().as_object_mut().unwrap().insert( name, v );
+                value.as_object_mut().unwrap().insert( name, v );
             },
             _ => {
                 let body_bytes = Bytes::from( text );
@@ -111,7 +121,7 @@ async fn process_part_as_json( field : Field<'_>, body_data : &mut RequestBody )
 
                     if body.is_ok()
                     {
-                        body_data.value.as_mut().unwrap().as_object_mut().unwrap().insert( name, body.unwrap() );
+                        value.as_object_mut().unwrap().insert( name, body.unwrap() );
                     }
                 }
             }
