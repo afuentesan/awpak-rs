@@ -115,9 +115,7 @@ fn get_variable( arg : &FnArg, sig : &Signature, url : &String ) -> ( proc_macro
 
             let priv_pat_ident = Ident::new( &format!( "__{}", pat_ident.ident.to_string() ), sig.span() );
 
-            let fake_attr = Ident::new( &from, sig.span() );
-
-            return declare_variable( from, ty, priv_pat_ident, fake_attr, pat_ident, url )
+            return declare_variable( from, ty, priv_pat_ident, pat_ident, url )
         }
     }
 
@@ -127,32 +125,31 @@ fn get_variable( arg : &FnArg, sig : &Signature, url : &String ) -> ( proc_macro
 fn declare_variable( 
     from : String, 
     ty : Box<syn::Type>, 
-    priv_pat_ident : Ident, 
-    fake_attr : Ident, 
+    priv_pat_ident : Ident,  
     pat_ident : PatIdent,
     url : &String
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     match from.as_str()
     {
-        "request_body" => declare_variable_object( &from, ty, priv_pat_ident, fake_attr, pat_ident ),
-        "body_param" => declare_variable_body_param( ty, priv_pat_ident, fake_attr, pat_ident ),
-        "query_params" => declare_variable_object( &from, ty, priv_pat_ident, fake_attr, pat_ident ),
-        "part_file" => declare_variable_file( ty, priv_pat_ident, fake_attr, pat_ident ),
-        "part_files" => declare_variable_file( ty, priv_pat_ident, fake_attr, pat_ident ),
-        "path_variable" => declare_variable_path( ty, priv_pat_ident, fake_attr, pat_ident, url ),
-        "context" => declare_variable_context( ty, fake_attr, pat_ident ),
-        "request_headers" => declare_variable_headers( ty, fake_attr, pat_ident, true ),
-        "response_headers" => declare_variable_headers( ty, fake_attr, pat_ident, false ),
-        "request_cookies" => declare_variable_cookies( ty, fake_attr, pat_ident, true ),
-        "response_cookies" => declare_variable_cookies( ty, fake_attr, pat_ident, false ),
-        "query_param" => declare_variable_query_param( ty, priv_pat_ident, fake_attr, pat_ident ),
+        "request_body" => declare_variable_object( &from, ty, priv_pat_ident, pat_ident ),
+        "body_param" => declare_variable_body_param( ty, priv_pat_ident, pat_ident ),
+        "query_params" => declare_variable_object( &from, ty, priv_pat_ident, pat_ident ),
+        "part_file" => declare_variable_file( ty, priv_pat_ident, pat_ident ),
+        "part_files" => declare_variable_file( ty, priv_pat_ident, pat_ident ),
+        "path_variable" => declare_variable_path( ty, priv_pat_ident, pat_ident, url ),
+        "context" => declare_variable_context( ty, pat_ident ),
+        "request_headers" => declare_variable_headers( ty, pat_ident, true ),
+        "response_headers" => declare_variable_headers( ty, pat_ident, false ),
+        "request_cookies" => declare_variable_cookies( ty, pat_ident, true ),
+        "response_cookies" => declare_variable_cookies( ty, pat_ident, false ),
+        "query_param" => declare_variable_query_param( ty, priv_pat_ident, pat_ident ),
         _ => unreachable!()
     }
 }
 
 fn declare_variable_query_param( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, fake_attr : Ident, pat_ident : PatIdent 
+    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     let name = pat_ident.ident.to_string();
@@ -170,7 +167,6 @@ fn declare_variable_query_param(
 
     (
         quote! {
-            #fake_attr!();
             let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_param_with_io::<#ty>( __io, #name );
             #optional_part
             #final_assign
@@ -180,8 +176,7 @@ fn declare_variable_query_param(
 }
 
 fn declare_variable_cookies(
-    ty : Box<syn::Type>, 
-    fake_attr : Ident, 
+    ty : Box<syn::Type>,  
     pat_ident : PatIdent,
     request : bool
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
@@ -214,7 +209,6 @@ fn declare_variable_cookies(
 
     (
         quote! {
-            #fake_attr!();
             #ident_assign
         },
         post_ident_assign
@@ -223,7 +217,6 @@ fn declare_variable_cookies(
 
 fn declare_variable_headers(
     ty : Box<syn::Type>, 
-    fake_attr : Ident, 
     pat_ident : PatIdent,
     request : bool
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
@@ -256,7 +249,6 @@ fn declare_variable_headers(
 
     (
         quote! {
-            #fake_attr!();
             #ident_assign
         },
         post_ident_assign
@@ -265,7 +257,6 @@ fn declare_variable_headers(
 
 fn declare_variable_context(
     ty : Box<syn::Type>, 
-    fake_attr : Ident, 
     pat_ident : PatIdent
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
@@ -284,7 +275,6 @@ fn declare_variable_context(
 
     (
         quote! {
-            #fake_attr!();
             #ident_assign
         },
         quote! {}
@@ -294,7 +284,6 @@ fn declare_variable_context(
 fn declare_variable_path( 
     ty : Box<syn::Type>, 
     priv_pat_ident : Ident, 
-    fake_attr : Ident, 
     pat_ident : PatIdent,
     url : &String
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
@@ -306,7 +295,7 @@ fn declare_variable_path(
         Ok( v ) => {
             (
                 quote! {
-                    #fake_attr!();
+                    // #fake_attr!();
                     let #priv_pat_ident = awpak_rs::parse_path_variable::<#ty>( &__io, #v ).await;
                     if #priv_pat_ident.is_none()
                     {
@@ -333,7 +322,7 @@ fn get_ind_path_variable( name : String, url : &String ) -> Result<usize, String
 }
 
 fn declare_variable_body_param( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, fake_attr : Ident, pat_ident : PatIdent 
+    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     let name = pat_ident.ident.to_string();
@@ -351,7 +340,6 @@ fn declare_variable_body_param(
 
     (
         quote! {
-            #fake_attr!();
             let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_param_with_io::<#ty>( __io, #name );
             #optional_part
             #final_assign
@@ -361,7 +349,7 @@ fn declare_variable_body_param(
 }
 
 fn declare_variable_file( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, fake_attr : Ident, pat_ident : PatIdent 
+    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     let filename = pat_ident.ident.to_string();
@@ -386,7 +374,7 @@ fn declare_variable_file(
 
     (
         quote! {
-            #fake_attr!();
+            // #fake_attr!();
             #priv_pat_ident_assign
             #optional_part
             #final_assign
@@ -396,7 +384,7 @@ fn declare_variable_file(
 }
 
 fn declare_variable_object( 
-    from : &str, ty : Box<syn::Type>, priv_pat_ident : Ident, fake_attr : Ident, pat_ident : PatIdent 
+    from : &str, ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     let name = pat_ident.ident.to_string();
@@ -418,7 +406,7 @@ fn declare_variable_object(
     (
         quote! {
 
-            #fake_attr!();
+            // #fake_attr!();
 
             #assign
 

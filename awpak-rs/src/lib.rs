@@ -30,7 +30,6 @@ pub use parser::parser::serialize_value;
 pub use parser::parser::parse_path_variable;
 pub use parser::from_async_str::from_async_str;
 pub use serde_json::Value;
-pub use serde_json::value::RawValue;
 
 #[strategy_pattern_type( search = "IgnoreCase" )]
 pub struct ContentTypeStrategy(fn( Bytes ) -> Result<serde_json::Value, error::error::Error>);

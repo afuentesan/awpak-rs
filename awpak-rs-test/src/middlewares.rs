@@ -1,5 +1,5 @@
 use awpak_rs::{io::io::IO, MiddlewareResponse};
-use awpak_rs::{get, middleware, post, query_params, request_body, DeserializeWithIO};
+use awpak_rs::{get, get_request_body_as, middleware, post, DeserializeWithIO, Value};
 use serde::{Deserialize, Serialize};
 
 use crate::Point;
@@ -335,7 +335,9 @@ fn add_z_test_pre_order_false(
 )]
 fn middleware_add_z_test_pre_order_false( mut io : IO ) -> MiddlewareResponse
 {
-    match &mut io.request.body.value {
+    let mut value = get_request_body_as!( io, Value );
+
+    match &mut value {
         Some( b ) => match b.as_object_mut() {
             Some( o ) => {
                 o.insert( "z".to_string(), awpak_rs::Value::from( 333 ) );
@@ -344,6 +346,8 @@ fn middleware_add_z_test_pre_order_false( mut io : IO ) -> MiddlewareResponse
         },
         _ => {}
     };
+
+    let _ = io.request.body.replace_body( &value );
 
     MiddlewareResponse::Next( io )
 }
@@ -356,7 +360,9 @@ fn middleware_add_z_test_pre_order_false( mut io : IO ) -> MiddlewareResponse
 )]
 fn middleware_add_z_test_pre_order( mut io : IO ) -> MiddlewareResponse
 {
-    match &mut io.request.body.value {
+    let mut value = get_request_body_as!( io, Value );
+
+    match &mut value {
         Some( b ) => match b.as_object_mut() {
             Some( o ) => {
                 o.insert( "z".to_string(), awpak_rs::Value::from( 333 ) );
@@ -365,6 +371,8 @@ fn middleware_add_z_test_pre_order( mut io : IO ) -> MiddlewareResponse
         },
         _ => {}
     };
+
+    let _ = io.request.body.replace_body( &value );
 
     MiddlewareResponse::Next( io )
 }
@@ -379,7 +387,9 @@ fn middleware_add_z_test_pre_order( mut io : IO ) -> MiddlewareResponse
 )]
 fn middleware_test_pre_z_exists( mut io : IO ) -> MiddlewareResponse
 {
-    match &mut io.request.body.value {
+    let mut value = get_request_body_as!( io, Value );
+
+    match &mut value {
         Some( b ) => match b.as_object_mut() {
             Some( o ) => {
                 let z = o.get( "z" );
@@ -399,6 +409,8 @@ fn middleware_test_pre_z_exists( mut io : IO ) -> MiddlewareResponse
         },
         _ => {}
     };
+
+    let _ = io.request.body.replace_body( &value );
 
     MiddlewareResponse::Next( io )
 }

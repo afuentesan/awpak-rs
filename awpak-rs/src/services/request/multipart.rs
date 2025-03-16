@@ -17,7 +17,7 @@ pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> mult
 
     let mut request_body = RequestBody::default();
 
-    request_body.value = Some( Value::Object( Map::new() ) );
+    // request_body.value = Some( Value::Object( Map::new() ) );
 
     let mut value = Value::Object( Map::new() );
 

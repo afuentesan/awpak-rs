@@ -132,9 +132,7 @@ pub struct Uri
 {
     pub host : Option<String>,
     pub path : String,
-    pub query : Option<String>,
-    pub query_map : Option<HashMap<String, String>>,
-    pub query_data : Arc<Box<[u8]>>,
+    pub query : Arc<Box<[u8]>>,
     pub port : Option<u16>,
     pub scheme : Option<String>
 }
@@ -161,17 +159,13 @@ impl Uri
             _ => None
         };
         
-        let query_map = Self::get_query_map( &query );
-
         let query_data = Self::get_query_bytes( &query );
 
         Self
         {
             host,
             path,
-            query,
-            query_map,
-            query_data,
+            query: query_data,
             port,
             scheme
         }
@@ -208,31 +202,13 @@ impl Uri
     pub fn get_data_from_query<T>( &self, io : Arc<Mutex<Option<IO>>> ) -> Result<T, Error>
     where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
     {
-        T::deserialize_with_io( self.query_data.clone(), io )
+        T::deserialize_with_io( self.query.clone(), io )
     }
 
     pub fn get_param_from_query<T>( &self, io : Arc<Mutex<Option<IO>>>, param : &str ) -> Result<T, Error>
     where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
     {
-        T::deserialize_param_with_io( self.query_data.clone(), io, param )
-    }
-
-    fn get_query_map( query : &Option<String> ) -> Option<HashMap<String, String>>
-    {
-        match query {
-            Some( s ) => match serde_qs::from_str::<HashMap<String, String>>( s.as_str() )
-            {
-                Ok( v ) => if v.len() > 0 {
-                    Some( v )
-                }
-                else
-                {
-                    None
-                },
-                _ => None
-            },
-            _ => None
-        }
+        T::deserialize_param_with_io( self.query.clone(), io, param )
     }
 }
 
@@ -244,9 +220,7 @@ impl Default for Uri
         {
             host : None,
             path : "/".to_string(),
-            query : None,
-            query_map : None,
-            query_data : Default::default(),
+            query : Default::default(),
             port : None,
             scheme : None
         }

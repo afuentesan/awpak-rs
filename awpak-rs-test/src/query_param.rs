@@ -1,4 +1,4 @@
-use awpak_rs::{get, query_param};
+use awpak_rs::get;
 
 use crate::Point;
 

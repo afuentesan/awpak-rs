@@ -1,7 +1,6 @@
 use awpak_rs::{io::{headers::headers::Headers, io::IO}, MiddlewareResponse};
 use awpak_rs::{middleware, post};
 
-use awpak_rs::{request_headers, request_body, response_headers};
 
 #[post( url = "/post_echo_request_header" )]
 fn post_echo_request_header(

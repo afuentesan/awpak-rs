@@ -17,10 +17,14 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
         panic!("Solo soporta structs con campos nombrados");
     };
 
+    let fn_name_prefix = format!( "__awpak_rs_async_fn_deserializer_{}_", ident.to_string().to_lowercase() );
+
     let mut field_names = Vec::new();
     let mut field_parsers = Vec::new();
     let mut field_assigns = Vec::new();
     let mut field_not_found = Vec::new();
+    let mut async_des_fncs = Vec::new();
+
 
     for field in fields.named.iter()
     {
@@ -33,12 +37,19 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
         {
             Some( f ) => {
 
+                let ( fn_definition, fn_name ) = get_wrapper_function(
+                    &fn_name_prefix, 
+                    field_name, 
+                    field_type.clone(), 
+                    f.clone()
+                );
+
                 field_not_found.push(
                     quote!
                     {
                         if #field_name.is_none() && unused_fields.contains( &stringify!(#field_name) )
                         {
-                            #field_name = Some( #f( "".to_string(), io.clone() ).map_err(serde::de::Error::custom)? );
+                            #field_name = Some( #fn_name( "".to_string(), io.clone() ).map_err(serde::de::Error::custom)? );
                         }
                     }
                 );
@@ -50,11 +61,19 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
                             unused_fields.swap_remove(index);
                         };
 
-                        let __value = map.next_value::<&awpak_rs::RawValue>()?;
+                        let __value = map.next_value::<awpak_rs::Value>()?;
 
-                        #field_name = Some( #f( __value.to_string(), io.clone() ).map_err(serde::de::Error::custom)? );
+                        let __value = match __value
+                        {
+                            awpak_rs::Value::String( s ) => s,
+                            _ => __value.to_string()
+                        };
+
+                        #field_name = Some( #fn_name( __value, io.clone() ).map_err(serde::de::Error::custom)? );
                     }
                 );
+
+                async_des_fncs.push( fn_definition );
                 
             },
             _ =>
@@ -94,7 +113,13 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
 
                         use awpak_rs::io::deserializer::deserialize_with_io::DeserializeWithIO;
 
-                        let __value = map.next_value::<&awpak_rs::RawValue>()?;
+                        let __value = map.next_value::<awpak_rs::Value>()?;
+
+                        let __value = match __value
+                        {
+                            awpak_rs::Value::String( s ) => s,
+                            _ => __value.to_string()
+                        };
 
                         let __value = __value.to_string().as_bytes().to_vec();
 
@@ -144,7 +169,6 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
             fn deserialize_seed_body<'de, A>( io : std::sync::Arc<std::sync::Mutex<Option<awpak_rs::io::io::IO>>>, map : &mut A ) -> Result<#ident, A::Error>
             where 
                 A: serde::de::MapAccess<'de>,
-                // T: for<'a> serde::Deserialize<'a> + awpak_rs::io::deserializer::deserialize_with_io::DeserializeWithIO
             {
                 let mut unused_fields : Vec<&str> = vec![];
 
@@ -158,11 +182,7 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
                     match key
                     {
                         #( stringify!(#field_names) => 
-                            { 
-                                // if let Some(index) = unused_fields.iter().position(|value| *value == stringify!(#field_names) ) {
-                                //     unused_fields.swap_remove(index);
-                                // };
-
+                            {
                                 #field_parsers 
                             }
                         )*
@@ -173,12 +193,12 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
                 #( #field_not_found )*
                 
                 Ok(#ident {
-                    //#( #field_names: #field_names.ok_or_else(|| serde::de::Error::missing_field(stringify!(#field_names)))? ),*
-
                     #( #field_assigns )*
                 })
             }
         }
+
+        #( #async_des_fncs )*
 
     }.into()
 }
@@ -187,33 +207,78 @@ fn get_with_context_function( attrs: &[ syn::Attribute ] ) -> Option<syn::Ident>
 {
     for attr in attrs
     {
-        // println!( "Attribute: {:#?}", attr );
-
         if let Ok( syn::Meta::List( meta_list ) ) = attr.meta.clone().try_into()
         {
-            // println!( "Entra en meta list" );
-
             if attr.path().is_ident( "io_deserializer" )
             {
-                // println!( "Is ident io_deserializer" );
-
                 for nested_meta in meta_list.tokens.into_iter()
                 {
-                    // println!( "{:#?}", nested_meta );
-
                     if let Ok( f ) = syn::parse2::<syn::Ident>( nested_meta.into() )
                     {
                         return Some( f )
                     }
-
-                    // if let Ok(syn::Meta::NameValue( name_value ) ) = syn::parse2::<syn::Meta>( nested_meta.into() )
-                    // {
-                    //     return Some( syn::Ident::new( &name_value.to_token_stream().to_string(), attr.span() ) )
-                    // }
                 }
             }
         }
     }
 
     None
+}
+
+fn get_wrapper_function( 
+    prefix : &str, 
+    field : &Option<proc_macro2::Ident>,
+    ty : syn::Type,
+    inner_fn : proc_macro2::Ident
+) -> ( proc_macro2::TokenStream, proc_macro2::Ident )
+{
+    let fn_name = proc_macro2::Ident::new(
+        &format!( "{}{}", prefix, field.as_ref().unwrap().to_string() ), 
+        field.as_ref().unwrap().span()
+    );
+
+    (
+        quote!
+        {
+            fn #fn_name( 
+                input : std::string::String, 
+                io : std::sync::Arc<std::sync::Mutex<std::option::Option<awpak_rs::io::io::IO>>> 
+            ) -> std::result::Result<#ty, std::string::String>
+            {
+                let ( tx, rx ) = std::sync::mpsc::channel();
+
+                let handle = awpak_rs::tokio::runtime::Handle::current();
+
+                let io_clone = io.clone();
+
+                let _ = std::thread::spawn( move ||
+                    {
+                    
+                        handle.block_on( async move
+                            {
+                                let result = #inner_fn( 
+                                    input, 
+                                    io_clone.lock().unwrap().as_ref().take().unwrap() 
+                                ).await;
+
+                                match tx.send( result )
+                                {
+                                    _ => {}    
+                                }
+                            }
+                        );
+                    }
+                ).join();
+
+                let val = match rx.recv()
+                {
+                    std::result::Result::Ok( v ) => v,
+                    std::result::Result::Err( e ) => return Err( e.to_string() )
+                };
+
+                val
+            }
+        },
+        fn_name
+    )
 }

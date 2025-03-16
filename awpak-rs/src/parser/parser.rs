@@ -16,7 +16,7 @@ where T: serde::Serialize
 pub fn parse_query_param_with_io<T>( io : IO, param : &str ) -> ( Option<T>, IO )
 where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
 {
-    let bytes = Arc::clone( &io.request.uri.query_data );
+    let bytes = Arc::clone( &io.request.uri.query );
 
     parse_param_with_io( io, param, bytes )
 }
@@ -48,7 +48,7 @@ where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
 pub fn parse_query_with_io<T>( io : IO ) -> ( Option<T>, IO )
 where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
 {
-    let bytes = Arc::clone( &io.request.uri.query_data );
+    let bytes = Arc::clone( &io.request.uri.query );
 
     parse_data_with_io( io, bytes )
 }

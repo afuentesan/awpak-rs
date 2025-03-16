@@ -1,6 +1,5 @@
 use awpak_rs::{post, set_status_code};
 
-use awpak_rs::body_param;
 
 #[post( url = "/post_echo_status_code" )]
 fn post_echo_status_code(

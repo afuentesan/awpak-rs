@@ -1,4 +1,7 @@
 use std::sync::Arc;
+use serde::Serialize;
+
+use crate::error::error::Error;
 
 
 #[derive(Clone)]
@@ -55,30 +58,24 @@ pub struct RequestBody
     ///     json_value["new_key"] = serde_json::json!("new_value");
     /// }
     /// ```
-    pub value : Option<serde_json::Value>,
+    // pub value : Option<serde_json::Value>,
     pub files : Vec<FileData>,
     pub data : Arc<Box<[u8]>>
 }
 
 impl RequestBody
 {
-    pub fn get_param( &self, name : &str ) -> Option<&serde_json::Value>
+    pub fn replace_body<T>( &mut self, body : &T ) -> Result<(), Error>
+    where T: Serialize
     {
-        if self.value.is_none()
+        match serde_json::to_vec( body )
         {
-            return None
+            Ok( v ) => {
+                self.data = Arc::new( v.into() );
+                Ok( () )
+            },
+            Err( e ) => Err( Error::ParserError( e.to_string() ) )
         }
-
-        let param = self.value.as_ref().unwrap();
-
-        let param = param.get( name );
-
-        if param.is_none()
-        {
-            return None
-        }
-
-        Some( param.unwrap() )
     }
 
     pub fn get_file( &self, name : &str ) -> Option<FileData>
@@ -121,7 +118,6 @@ impl Default for RequestBody
     {
         Self
         {
-            value : Default::default(), 
             files : Default::default(), 
             data : Default::default() 
         }

@@ -308,6 +308,20 @@ impl DeserializeWithIO for char
     }
 }
 
+impl DeserializeWithIO for serde_json::Value
+{
+    fn deserialize_with_io( 
+        bytes : Arc<Box<[u8]>>, 
+        __io : Arc<Mutex<Option<IO>>> 
+    ) -> Result<Self, Error>
+    {
+        Ok( 
+            serde_json::from_slice::<Self>( &bytes )
+                .map_err( | e | Error::ParserError( e.to_string() ) )? 
+        )
+    }
+}
+
 impl<T> DeserializeWithIO for Vec<T>
 where for<'a> T: Deserialize<'a> + DeserializeWithIO
 {

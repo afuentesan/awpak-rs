@@ -1,7 +1,5 @@
 use awpak_rs::{get, redirect_to};
 
-use awpak_rs::query_param;
-
 #[get( url = "/get_redirect_default" )]
 fn get_redirect_default(
     #[query_param]

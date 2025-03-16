@@ -1,6 +1,6 @@
 use awpak_rs::io::cookies::cookies::Cookies;
 
-use awpak_rs::{post, request_cookies, request_body, response_cookies};
+use awpak_rs::post;
 
 #[post( url = "/post_echo_request_cookies" )]
 fn post_echo_request_cookies(

@@ -2,7 +2,6 @@
 use awpak_rs::from_async_str::FromAsyncStr;
 use awpak_rs::io::io::IO;
 use awpak_rs::get;
-use awpak_rs::path_variable;
 use serde::Serialize;
 
 #[derive(Serialize)]
