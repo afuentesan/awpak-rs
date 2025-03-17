@@ -1,5 +1,5 @@
 use awpak_rs::{io::io::IO, MiddlewareResponse};
-use awpak_rs::{get, get_request_body_as, middleware, post, DeserializeWithIO, Value};
+use awpak_rs::{get, get_query_params_as, get_request_body_as, middleware, post, DeserializeWithIO, Value};
 use serde::{Deserialize, Serialize};
 
 use crate::Point;
@@ -413,4 +413,44 @@ fn middleware_test_pre_z_exists( mut io : IO ) -> MiddlewareResponse
     let _ = io.request.body.replace_body( &value );
 
     MiddlewareResponse::Next( io )
+}
+
+#[middleware(
+    urls=[
+        "/get_replace_query_point_data"
+    ],
+    order=2
+)]
+fn middleware_replace_query_point_data( mut io : IO ) -> MiddlewareResponse
+{
+    let point = get_query_params_as!( io, Point );
+
+    let _ = io.request.uri.replace_query( 
+        &match point
+        {
+            Some( mut p ) => {
+                match p.x
+                {
+                    Some( x ) => { p.x = Some( x + 1.0 ); }
+                    _ => {}
+                };
+
+                p.y += 1.0;
+
+                p
+            },
+            _ => Point { x : Some( 0.0 ), y : 0.0 } 
+        }
+    );
+
+    MiddlewareResponse::Next( io )
+}
+
+#[get( url = "/get_replace_query_point_data" )]
+fn get_replace_query_point_data(
+    #[query_params]
+    point : Point
+) -> Point
+{
+    point
 }

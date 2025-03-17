@@ -11,6 +11,7 @@ mod query_param;
 mod redirects;
 mod config_files;
 mod async_deserializer;
+mod from_async_str;
 
 #[awpak_main( 
     ip = "127.0.0.1", 

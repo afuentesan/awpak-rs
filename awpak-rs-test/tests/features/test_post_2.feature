@@ -59,3 +59,25 @@ Feature: Post 2 feature
     Given request_body='{ "x" : 3, "y" : 5 }', content_type="application/json"
     When I call /post_echo_context_mut
     Then response='x:79'
+
+  Scenario: Async deserializer
+
+    Given request_body='{"x":1,"y":1}', content_type="application/json"
+    When I call /post_point_with_context
+    Then response='{"point":null,"x":1.0,"y":201.0}'
+
+    Given request_body='{"x":1,"y":1,"point":{"x":2,"y":2}}', content_type="application/json"
+    When I call /post_point_with_context
+    Then response='{"point":{"x":2.0,"y":2.0},"x":1.0,"y":201.0}'
+
+    Given request_body='{"x":1,"y":1,"point":{"x":2,"y":2}}', content_type="application/json"
+    When I call /post_point_with_context_wrapper
+    Then response='{"point":{"point":null,"x":2.0,"y":202.0},"x":201.0,"y":1.0}'
+
+    Given request_body='{"x":1,"y":1,"point":{"x":2,"y":2,"point":{"x":3,"y":3}}}', content_type="application/json"
+    When I call /post_point_with_context_wrapper
+    Then response='{"point":{"point":{"x":3.0,"y":3.0},"x":2.0,"y":202.0},"x":201.0,"y":1.0}'
+
+    Given request_body='1', content_type="application/json"
+    When I call /post_request_body_from_async_str
+    Then response='{"status":201}'
