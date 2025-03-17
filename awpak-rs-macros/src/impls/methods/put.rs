@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 
-use super::methods::methods_impl;
+use super::{get::get_docs, methods::methods_impl};
 
 pub fn put_impl( args: TokenStream, item: TokenStream ) -> TokenStream
 {
-    methods_impl( args, item, "put" )
+    methods_impl( args, item, "put", get_docs() )
 }

@@ -96,3 +96,21 @@ where T: FromAsyncStr<T>
         _ => None
     }
 }
+
+pub async fn parse_request_body_from_async_str<T>( io : &IO ) -> Option<T>
+where T: FromAsyncStr<T>
+{
+    match std::str::from_utf8( &io.request.body.data ) {
+        Ok( s ) => T::from_async_str( io, s ).await.ok(),
+        _ => None
+    }
+}
+
+pub async fn parse_query_params_from_async_str<T>( io : &IO ) -> Option<T>
+where T: FromAsyncStr<T>
+{
+    match std::str::from_utf8( &io.request.uri.query ) {
+        Ok( s ) => T::from_async_str( io, s ).await.ok(),
+        Err( _e ) => None
+    }
+}

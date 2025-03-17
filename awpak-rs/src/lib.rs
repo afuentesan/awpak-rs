@@ -28,6 +28,8 @@ pub use parser::parser::parse_query_param_with_io;
 pub use parser::parser::parse_bytes_with_io;
 pub use parser::parser::serialize_value;
 pub use parser::parser::parse_path_variable;
+pub use parser::parser::parse_request_body_from_async_str;
+pub use parser::parser::parse_query_params_from_async_str;
 pub use parser::from_async_str::from_async_str;
 pub use serde_json::Value;
 

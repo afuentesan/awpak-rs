@@ -1,6 +1,8 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, sync::Arc};
 
-use crate::{error::error::Error, io::{cookies::cookies::Cookies, deserializer::deserialize_with_io::DeserializeWithIO, headers::headers::Headers, io::IO}};
+use serde::Serialize;
+
+use crate::{error::error::Error, io::{cookies::cookies::Cookies, headers::headers::Headers}};
 
 use super::request_body::RequestBody;
 
@@ -181,7 +183,7 @@ impl Uri
                     match serde_qs::from_str::<HashMap<String, serde_json::Value>>( s )
                     {
                         Ok( v ) => v,
-                        _ => return Arc::default()
+                        _ => return Arc::new( s.as_bytes().into() )
                     }
                 )
                 {
@@ -192,23 +194,24 @@ impl Uri
                             _ => v.to_string().as_bytes().into()
                         }
                     ),
-                    _ => Arc::default()
+                    _ => Arc::new( s.as_bytes().into() )
                 }
             },
             _ => Arc::default() 
         }
     }
 
-    pub fn get_data_from_query<T>( &self, io : Arc<Mutex<Option<IO>>> ) -> Result<T, Error>
-    where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
+    pub fn replace_query<T>( &mut self, query : &T ) -> Result<(), Error>
+    where T: Serialize
     {
-        T::deserialize_with_io( self.query.clone(), io )
-    }
-
-    pub fn get_param_from_query<T>( &self, io : Arc<Mutex<Option<IO>>>, param : &str ) -> Result<T, Error>
-    where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
-    {
-        T::deserialize_param_with_io( self.query.clone(), io, param )
+        match serde_json::to_vec( query )
+        {
+            Ok( v ) => {
+                self.query = Arc::new( v.into() );
+                Ok( () )
+            },
+            Err( e ) => Err( Error::ParserError( e.to_string() ) )
+        }
     }
 }
 
