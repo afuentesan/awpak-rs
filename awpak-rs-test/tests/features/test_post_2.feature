@@ -81,3 +81,13 @@ Feature: Post 2 feature
     Given request_body='1', content_type="application/json"
     When I call /post_request_body_from_async_str
     Then response='{"status":201}'
+
+  Scenario: body_param custom deserializer
+
+    Given request_body='{"point":"1,2"}', content_type="application/json"
+    When I call /post_request_body_custom_deserializer
+    Then response='{"x":201.0,"y":2.0}'
+
+    Given request_body='{"point_renamed":"1,2"}', content_type="application/json"
+    When I call /post_request_body_custom_deserializer_change_name
+    Then response='{"x":201.0,"y":2.0}'

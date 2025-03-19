@@ -6,27 +6,25 @@ use hyper::body::{Bytes, Incoming};
 use multer::{Field, Multipart};
 use serde_json::{Map, Value};
 
-use crate::{io::request::request_body::{RequestBody, FileData}, ContentTypeStrategy};
+use crate::{io::request::body_data::{BodyData, FileData}, ContentTypeStrategy};
 
 use super::service_request::REQUEST_MIME_TYPES_AVAILABLES;
 
 // Process the request body as multipart/form-data.
-pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> multer::Result<RequestBody>
+pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> multer::Result<BodyData>
 {  
     let mut multipart = get_multipart( body, boundary );
 
-    let mut request_body = RequestBody::default();
-
-    // request_body.value = Some( Value::Object( Map::new() ) );
+    let mut body_data = BodyData::default();
 
     let mut value = Value::Object( Map::new() );
 
     while let Some( field ) = multipart.next_field().await?
     {
-        process_part( field, &mut request_body.files, &mut value ).await;
+        process_part( field, &mut body_data.files, &mut value ).await;
     }
 
-    request_body.data = Arc::new( 
+    body_data.data = Arc::new( 
         match serde_json::to_vec( &value )
         {
             Ok( b ) => b.into(),
@@ -34,7 +32,7 @@ pub async fn get_body_from_multipart( body: Incoming, boundary: String ) -> mult
         }
     );
 
-    Ok( request_body )
+    Ok( body_data )
 }
 
 fn get_multipart<'a>( body: Incoming, boundary: String ) -> Multipart<'a>

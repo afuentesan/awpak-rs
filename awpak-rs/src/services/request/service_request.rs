@@ -4,7 +4,7 @@ use std::{collections::BTreeSet, sync::Arc};
 use http_body_util::BodyExt as _;
 use hyper::header::{HeaderName, HeaderValue, ACCEPT, CONTENT_TYPE};
 
-use crate::io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{request_body::RequestBody, request_data::{RequestData, Uri}}};
+use crate::io::{cookies::cookies::Cookies, headers::{header_data::HeaderData, headers::Headers, mime::Mime}, request::{body_data::BodyData, request_data::{RequestData, Uri}}};
 
 use super::multipart::get_body_from_multipart;
 
@@ -47,7 +47,7 @@ fn get_cookies( parts : &hyper::http::request::Parts ) -> Cookies
     cookies
 }
 
-async fn get_body( body : hyper::body::Incoming, boundary : Option<String> ) -> Result<RequestBody, hyper::Error>
+async fn get_body( body : hyper::body::Incoming, boundary : Option<String> ) -> Result<BodyData, hyper::Error>
 {
     if boundary.is_some()
     {
@@ -58,7 +58,7 @@ async fn get_body( body : hyper::body::Incoming, boundary : Option<String> ) -> 
             {
                 eprintln!( "{}", e );
 
-                Ok( RequestBody::default() )
+                Ok( BodyData::default() )
             }
         }
     }
@@ -69,27 +69,19 @@ async fn get_body( body : hyper::body::Incoming, boundary : Option<String> ) -> 
         {
             let bytes = v.to_bytes().to_vec();
 
-            let mut request_body = RequestBody::default();
+            let mut body_data = BodyData::default();
 
-            request_body.data = Arc::new( bytes.into() );
+            body_data.data = Arc::new( bytes.into() );
 
-            Ok( request_body )
+            Ok( body_data )
         },
         Err( e ) =>
         {
             eprintln!( "{}", e );
 
-            Ok( RequestBody::default() )
+            Ok( BodyData::default() )
         }
     }
-
-    // let mut request_body = RequestBody::default();
-
-    // request_body.value = value;
-
-    // Ok( 
-    //     request_body
-    // )
 }
 
 pub const REQUEST_MIME_TYPES_AVAILABLES : &[&str] = &[ "application/json" ];

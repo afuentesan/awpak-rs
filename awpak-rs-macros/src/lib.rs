@@ -429,7 +429,7 @@ pub fn body_param( _args : TokenStream ) -> TokenStream
 ///
 /// This macro should be applied to function parameters to deserialize path variables.
 /// The extracted value can be converted into any Rust primitive type or any type
-/// that implements the `FromAsyncStr` trait.
+/// that implements the `FromPathVariable` trait.
 ///
 /// # Example
 ///
@@ -443,7 +443,7 @@ pub fn body_param( _args : TokenStream ) -> TokenStream
 /// A request like `GET /user/john` will return `"john"`.
 ///
 /// You can also deserialize the path variable into a more complex type that
-/// implements `FromAsyncStr`:
+/// implements `FromPathVariable`:
 ///
 /// ```ignore
 /// #[get(url = "/user/{id}")]
@@ -452,7 +452,7 @@ pub fn body_param( _args : TokenStream ) -> TokenStream
 /// }
 /// ```
 ///
-/// If `User` implements `FromAsyncStr`, the framework will automatically fetch
+/// If `User` implements `FromPathVariable`, the framework will automatically fetch
 /// the user from a database or other source based on the `id` provided in the URL.
 #[proc_macro]
 pub fn path_variable( _args : TokenStream ) -> TokenStream

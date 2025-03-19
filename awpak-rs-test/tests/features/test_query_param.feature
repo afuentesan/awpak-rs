@@ -18,6 +18,10 @@ Feature: Query param feature
     When I call /get_echo_param_string
     Then response="a=hello"
 
+    Given query='a_renamed=hello'
+    When I call /get_echo_param_string_change_name
+    Then response="a=hello"
+
     Given query=''
     When I call /get_echo_param_option_string
     Then response="a="
@@ -33,3 +37,15 @@ Feature: Query param feature
     Given query='a=3'
     When I call /get_echo_param_option_number
     Then response="a=3"
+
+    Given query='point=1,2'
+    When I call /get_echo_param_point_custom_deserializer
+    Then response="x=201, y=2"
+
+    Given query='point=1'
+    When I call /get_echo_param_point_custom_deserializer
+    Then response="x=0, y=201"
+
+    Given query='point_renamed=1'
+    When I call /get_echo_param_point_custom_deserializer_change_name
+    Then response="x=0, y=201"

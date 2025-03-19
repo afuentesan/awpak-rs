@@ -9,7 +9,7 @@ use crate::Point;
 #[derive(Serialize, Deserialize, DeserializeWithIO)]
 pub struct PointWithContextWrapper
 {
-    #[io_deserializer(deserialize_y_with_context)]
+    #[io_deserializer( deserialize_with = deserialize_y_with_context )]
     x : f32,
     y : f32,
     #[serde(default)]
@@ -20,7 +20,7 @@ pub struct PointWithContextWrapper
 pub struct PointWithContext
 {
     x : f32,
-    #[io_deserializer(deserialize_y_with_context)]
+    #[io_deserializer( deserialize_with = deserialize_y_with_context )]
     y : f32,
     #[serde(default)]
     point : Option<Point>

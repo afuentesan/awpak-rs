@@ -30,7 +30,7 @@ impl FileData
 /// Represents the body of an HTTP request.
 ///
 /// The body can contain structured JSON data or uploaded files, depending on the request's content type.
-pub struct RequestBody
+pub struct BodyData
 {
     /// The JSON payload of the request body, if applicable.
     ///
@@ -39,22 +39,22 @@ pub struct RequestBody
     ///
     /// # Example: Reading JSON data
     /// ```rust
-    /// use awpak_rs::io::request::request_body::RequestBody;
+    /// use awpak_rs::io::request::body_data::BodyData;
     /// 
-    /// let request_body = RequestBody { value : None, files : vec![] };
+    /// let body_data = BodyData { value : None, files : vec![] };
     /// 
-    /// if let Some(json_value) = &request_body.value {
+    /// if let Some(json_value) = &body_data.value {
     ///     println!("Received JSON: {}", json_value);
     /// }
     /// ```
     ///
     /// # Example: Modifying JSON data
     /// ```rust
-    /// use awpak_rs::io::request::request_body::RequestBody;
+    /// use awpak_rs::io::request::body_data::BodyData;
     /// 
-    /// let mut request_body = RequestBody { value : None, files : vec![] };
+    /// let mut body_data = BodyData { value : None, files : vec![] };
     /// 
-    /// if let Some(json_value) = &mut request_body.value {
+    /// if let Some(json_value) = &mut body_data.value {
     ///     json_value["new_key"] = serde_json::json!("new_value");
     /// }
     /// ```
@@ -63,7 +63,7 @@ pub struct RequestBody
     pub data : Arc<Box<[u8]>>
 }
 
-impl RequestBody
+impl BodyData
 {
     pub fn replace_body<T>( &mut self, body : &T ) -> Result<(), Error>
     where T: Serialize
@@ -112,7 +112,7 @@ impl RequestBody
     }
 }
 
-impl Default for RequestBody
+impl Default for BodyData
 {
     fn default() -> Self
     {
@@ -126,12 +126,12 @@ impl Default for RequestBody
 
 pub trait ToFileData
 {
-    fn to_file_data( body : &RequestBody, name : &str  ) -> Result<Self, ()> where Self: Sized;    
+    fn to_file_data( body : &BodyData, name : &str  ) -> Result<Self, ()> where Self: Sized;    
 }
 
 impl ToFileData for FileData
 {
-    fn to_file_data( body : &RequestBody, name : &str ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &BodyData, name : &str ) -> Result<Self, ()> where Self: Sized
     {
         match body.get_file( name ) {
             Some( f ) => Ok( f ),
@@ -142,7 +142,7 @@ impl ToFileData for FileData
 
 impl ToFileData for Vec<FileData>
 {
-    fn to_file_data( body : &RequestBody, name : &str ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &BodyData, name : &str ) -> Result<Self, ()> where Self: Sized
     {
         match body.get_files( name ) {
             Some( f ) => Ok( f ),
@@ -154,7 +154,7 @@ impl ToFileData for Vec<FileData>
 impl<T> ToFileData for Option<T>
 where T: ToFileData
 {
-    fn to_file_data( body : &RequestBody, name : &str  ) -> Result<Self, ()> where Self: Sized
+    fn to_file_data( body : &BodyData, name : &str  ) -> Result<Self, ()> where Self: Sized
     {
         match T::to_file_data( body, name )
         {

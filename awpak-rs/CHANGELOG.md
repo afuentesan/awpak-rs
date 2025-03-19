@@ -11,12 +11,11 @@ All notable changes to this project will be documented in this file.
   - Uses the `AWPAK_RS_HOME` environment variable to determine the application's home directory.
 
 ### Changed
-- **Renamed `BodyData` to `RequestBody`**:
-  - The struct `BodyData` has been renamed to `RequestBody`.
-  - It has been moved from `awpak_rs::body::body::BodyData` to `awpak_rs::io::request::request_body::RequestBody`.
+- `BodyData`:
+  - It has been moved from `awpak_rs::body::body::BodyData` to `awpak_rs::io::request::body_data::BodyData`.
   - Update imports accordingly:
     ```rust
-    use awpak_rs::io::request::request_body::RequestBody;
+    use awpak_rs::io::request::body_data::BodyData;
     ```
 
 ## [0.0.1] - Initial Release

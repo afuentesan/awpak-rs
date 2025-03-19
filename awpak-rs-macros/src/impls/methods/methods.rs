@@ -124,7 +124,7 @@ fn get_variable( arg : &FnArg, sig : &Signature, url : &String ) -> ( proc_macro
 }
 
 fn declare_variable( 
-    from : ( String, Option<proc_macro2::Ident> ), 
+    from : ( String, Option<proc_macro2::Ident>, Option<String> ), 
     ty : Box<syn::Type>, 
     priv_pat_ident : Ident,  
     pat_ident : PatIdent,
@@ -134,26 +134,36 @@ fn declare_variable(
     match from.0.as_str()
     {
         "request_body" => declare_variable_object( from, ty, priv_pat_ident, pat_ident ),
-        "body_param" => declare_variable_body_param( ty, priv_pat_ident, pat_ident ),
+        "body_param" => declare_variable_body_param( from.1, from.2, ty, priv_pat_ident, pat_ident ),
         "query_params" => declare_variable_object( from, ty, priv_pat_ident, pat_ident ),
-        "part_file" => declare_variable_file( ty, priv_pat_ident, pat_ident ),
-        "part_files" => declare_variable_file( ty, priv_pat_ident, pat_ident ),
-        "path_variable" => declare_variable_path( ty, priv_pat_ident, pat_ident, url ),
+        "part_file" => declare_variable_file( ty, priv_pat_ident, pat_ident, from.2 ),
+        "part_files" => declare_variable_file( ty, priv_pat_ident, pat_ident, from.2 ),
+        "path_variable" => declare_variable_path( from.1, from.2, ty, priv_pat_ident, pat_ident, url ),
         "context" => declare_variable_context( ty, pat_ident ),
         "request_headers" => declare_variable_headers( ty, pat_ident, true ),
         "response_headers" => declare_variable_headers( ty, pat_ident, false ),
         "request_cookies" => declare_variable_cookies( ty, pat_ident, true ),
         "response_cookies" => declare_variable_cookies( ty, pat_ident, false ),
-        "query_param" => declare_variable_query_param( ty, priv_pat_ident, pat_ident ),
+        "query_param" => declare_variable_query_param( from.1, from.2, ty, priv_pat_ident, pat_ident ),
         _ => unreachable!()
     }
 }
 
 fn declare_variable_query_param( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
+    fnc : Option<proc_macro2::Ident>,
+    name : Option<String>,
+    ty : Box<syn::Type>, 
+    priv_pat_ident : Ident, 
+    pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
-    let name = pat_ident.ident.to_string();
+    // let name = pat_ident.ident.to_string();
+
+    let name = match name
+    {
+        Some( n ) if n.trim() != "" => n.trim().to_string(),
+        _ => pat_ident.ident.to_string() 
+    };
 
     let optional_part = quote! {
         if #priv_pat_ident.is_none()
@@ -166,9 +176,24 @@ fn declare_variable_query_param(
         let #pat_ident = #priv_pat_ident.unwrap();
     };
 
+    let assign = match fnc {
+        Some( i ) => get_param_async_fn(
+            &i, &priv_pat_ident, ty.clone(), "query_param", &name,
+            quote!
+            {
+                __io.request.uri.query.clone(), #name
+            }
+        ),
+        _ => quote!
+        {
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_param_with_io::<#ty>( __io, #name );
+        }
+    };
+
     (
         quote! {
-            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_param_with_io::<#ty>( __io, #name );
+            // let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_query_param_with_io::<#ty>( __io, #name );
+            #assign
             #optional_part
             #final_assign
         },
@@ -283,21 +308,45 @@ fn declare_variable_context(
 }
 
 fn declare_variable_path( 
+    fnc : Option<proc_macro2::Ident>,
+    name : Option<String>,
     ty : Box<syn::Type>, 
     priv_pat_ident : Ident, 
     pat_ident : PatIdent,
     url : &String
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
-    let name = pat_ident.to_token_stream().to_string();
+    // let name = pat_ident.to_token_stream().to_string();
+
+    let name = match name
+    {
+        Some( n ) if n.trim() != "" => n.trim().to_string(),
+        _ => pat_ident.ident.to_string() 
+    };
 
     match get_ind_path_variable( name.clone(), url )
     {
         Ok( v ) => {
-            (
-                quote! {
-                    // #fake_attr!();
+
+            let assign = match fnc {
+                Some( i ) => get_path_variable_async_fn(
+                    &i, &priv_pat_ident, ty.clone(), "path_variable", &name,
+                    quote!
+                    {
+                        #v
+                    }
+                ),
+                _ => quote!
+                {
                     let #priv_pat_ident = awpak_rs::parse_path_variable::<#ty>( &__io, #v ).await;
+                }
+            };
+
+            (
+                quote!
+                {    
+                    // let #priv_pat_ident = awpak_rs::parse_path_variable::<#ty>( &__io, #v ).await;
+                    #assign
                     if #priv_pat_ident.is_none()
                     {
                         return Err( awpak_rs::error::error::Error::ParserError( format!( "Path variable error: {}", #name ) ) )
@@ -323,10 +372,20 @@ fn get_ind_path_variable( name : String, url : &String ) -> Result<usize, String
 }
 
 fn declare_variable_body_param( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
+    fnc : Option<proc_macro2::Ident>,
+    name : Option<String>,
+    ty : Box<syn::Type>, 
+    priv_pat_ident : Ident, 
+    pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
-    let name = pat_ident.ident.to_string();
+    let name = match name
+    {
+        Some( n ) if n.trim() != "" => n.trim().to_string(),
+        _ => pat_ident.ident.to_string() 
+    };
+
+    // let name = pat_ident.ident.to_string();
 
     let optional_part = quote! {
         if #priv_pat_ident.is_none()
@@ -339,9 +398,24 @@ fn declare_variable_body_param(
         let #pat_ident = #priv_pat_ident.unwrap();
     };
 
+    let assign = match fnc {
+        Some( i ) => get_param_async_fn(
+            &i, &priv_pat_ident, ty.clone(), "body_param", &name,
+            quote!
+            {
+                __io.request.body.data.clone(), #name
+            }
+        ),
+        _ => quote!
+        {
+            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_param_with_io::<#ty>( __io, #name );
+        }
+    };
+
     (
         quote! {
-            let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_param_with_io::<#ty>( __io, #name );
+            // let ( #priv_pat_ident, mut __io ) = awpak_rs::parse_body_param_with_io::<#ty>( __io, #name );
+            #assign
             #optional_part
             #final_assign
         },
@@ -350,14 +424,23 @@ fn declare_variable_body_param(
 }
 
 fn declare_variable_file( 
-    ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
+    ty : Box<syn::Type>, 
+    priv_pat_ident : Ident, 
+    pat_ident : PatIdent,
+    filename : Option<String>
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
-    let filename = pat_ident.ident.to_string();
+    let filename = match filename
+    {
+        Some( n ) if n.trim() != "" => n.trim().to_string(),
+        _ => pat_ident.ident.to_string() 
+    };
+
+    // let filename = pat_ident.ident.to_string();
 
     let priv_pat_ident_assign = quote! {
         let #priv_pat_ident = {
-            use awpak_rs::io::request::request_body::ToFileData;
+            use awpak_rs::io::request::body_data::ToFileData;
             <#ty>::to_file_data( &__io.request.body, #filename )
         };
     };
@@ -385,7 +468,7 @@ fn declare_variable_file(
 }
 
 fn declare_variable_object( 
-    options : ( String, Option<proc_macro2::Ident> ), ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
+    options : ( String, Option<proc_macro2::Ident>, Option<String> ), ty : Box<syn::Type>, priv_pat_ident : Ident, pat_ident : PatIdent 
 ) -> ( proc_macro2::TokenStream, proc_macro2::TokenStream )
 {
     let from = &options.0;
@@ -465,7 +548,55 @@ fn get_async_fn(
     }
 }
 
-fn get_variable_attribute( arg : &PatType ) -> Option<( String, Option<proc_macro2::Ident> )>
+fn get_path_variable_async_fn(
+    fn_ident : &proc_macro2::Ident,
+    priv_pat_ident : &proc_macro2::Ident,
+    ty : Box<syn::Type>,
+    from : &str,
+    name : &str,
+    src : proc_macro2::TokenStream
+) -> proc_macro2::TokenStream
+{
+    quote!
+    {
+        let #priv_pat_ident : std::option::Option<#ty> = match awpak_rs::get_str_path_variable( &__io, #src )
+        {
+            Some( s ) => match #fn_ident( &__io, &s ).await
+            {
+                Ok( r ) => std::option::Option::Some( r ),
+                _ => return Err( awpak_rs::error::error::Error::ParserError( format!( "{} error: {}", #from, #name ) ) )
+
+            },
+            _ => return Err( awpak_rs::error::error::Error::ParserError( format!( "{} error: {}", #from, #name ) ) ) 
+        };
+    }
+}
+
+fn get_param_async_fn(
+    fn_ident : &proc_macro2::Ident,
+    priv_pat_ident : &proc_macro2::Ident,
+    ty : Box<syn::Type>,
+    from : &str,
+    name : &str,
+    src : proc_macro2::TokenStream
+) -> proc_macro2::TokenStream
+{
+    quote!
+    {
+        let #priv_pat_ident : std::option::Option<#ty> = match awpak_rs::get_param_str_from_bytes( #src )
+        {
+            Ok( s ) => match #fn_ident( &__io, &s ).await
+            {
+                Ok( r ) => std::option::Option::Some( r ),
+                Err( e ) => return Err( awpak_rs::error::error::Error::ParserError( format!( "{} error: {}. {}", #from, #name, e ) ) )
+
+            },
+            Err( e ) => return Err( e ) 
+        };
+    }
+}
+
+fn get_variable_attribute( arg : &PatType ) -> Option<( String, Option<proc_macro2::Ident>, Option<String> )>
 {
     for i in 0..arg.attrs.len()
     {
@@ -473,7 +604,13 @@ fn get_variable_attribute( arg : &PatType ) -> Option<( String, Option<proc_macr
 
         if found.is_some()
         {
-            return Some( ( found.unwrap(), get_fnc_async( &arg.attrs[ i ] ) ) );
+            return match get_fnc_async( &arg.attrs[ i ] )
+            {
+                Some( p ) =>  Some( ( found.unwrap(), p.0, p.1 ) ),
+                _ => Some( ( found.unwrap(), None, None ) )
+            }
+            
+            // return Some( ( found.unwrap(), get_fnc_async( &arg.attrs[ i ] ) ) );
         }
     }
 
@@ -483,19 +620,21 @@ fn get_variable_attribute( arg : &PatType ) -> Option<( String, Option<proc_macr
 #[derive(FromMeta)]
 struct AttributeOptions
 {
-    deserialize_with : proc_macro2::Ident
+    deserialize_with : Option<proc_macro2::Ident>,
+    name : Option<String>
 }
 
-fn get_fnc_async( attr : &syn::Attribute ) -> Option<proc_macro2::Ident>
+fn get_fnc_async( attr : &syn::Attribute ) -> Option<( Option<proc_macro2::Ident>, Option<String> )>
 {
-    let AttributeOptions { deserialize_with } = match get_attributes( attr.meta.require_list().ok()?.tokens.clone().into() ) {
+    let AttributeOptions { 
+        deserialize_with, 
+        name 
+    } = match get_attributes( attr.meta.require_list().ok()?.tokens.clone().into() ) {
         Ok( v ) => v,
         Err( _e ) => return None
     };
 
-    
-
-    Some( deserialize_with )
+    Some( ( deserialize_with, name ) )
 }
 
 fn match_variable_attribute( attr : &str ) -> Option<String>

@@ -106,8 +106,8 @@ async fn get_user(#[path_variable] user: User) -> User {
     user
 }
 
-impl FromAsyncStr<User> for User {
-    async fn from_async_str(io: &IO, s: &str) -> Result<User, ()> {
+impl FromPathVariable<User> for User {
+    async fn from_path_variable(io: &IO, s: &str) -> Result<User, String> {
         let user = get_user_from_db(s).await;
         Ok(user)
     }

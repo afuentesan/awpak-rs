@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::Value;
 
-use crate::{from_async_str::FromAsyncStr, io::{deserializer::deserialize_with_io::DeserializeWithIO, io::IO}};
+use crate::{error::error::Error, io::{deserializer::{deserialize_with_io::DeserializeWithIO, from_path_variable::FromPathVariable}, io::IO}};
 
 pub fn serialize_value<T>( value : T ) -> Option<Value>
 where T: serde::Serialize
@@ -84,33 +84,63 @@ where T: for<'a> serde::Deserialize<'a> + DeserializeWithIO
 }
 
 pub async fn parse_path_variable<T>( io : &IO, ind : usize ) -> Option<T>
-where T: FromAsyncStr<T>
+where T: FromPathVariable
 {
-    match io.request.uri.path.split( "/" ).enumerate().find(  | v | v.0 == ind ).map( | v | v.1 )
+    match get_str_path_variable( io, ind )
     {
-        Some( v ) => match T::from_async_str( io, v ).await
+        Some( v ) => match T::from_path_variable( io, &v ).await
         {
             Ok( v ) => Some( v ),
             _ => None
         },
+        _ => None   
+    }
+
+    // match io.request.uri.path.split( "/" ).enumerate().find(  | v | v.0 == ind ).map( | v | v.1 )
+    // {
+    //     Some( v ) => match T::from_path_variable( io, v ).await
+    //     {
+    //         Ok( v ) => Some( v ),
+    //         _ => None
+    //     },
+    //     _ => None
+    // }
+}
+
+pub fn get_str_path_variable( io : &IO, ind : usize ) -> Option<String>
+{
+    match io.request.uri.path.split( "/" ).enumerate().find(  | v | v.0 == ind ).map( | v | v.1 )
+    {
+        Some( v ) => Some( v.to_string() ),
         _ => None
     }
 }
 
-pub async fn parse_request_body_from_async_str<T>( io : &IO ) -> Option<T>
-where T: FromAsyncStr<T>
+pub fn get_param_str_from_bytes( bytes : Arc<Box<[u8]>>, param : &str ) -> Result<String, Error>
 {
-    match std::str::from_utf8( &io.request.body.data ) {
-        Ok( s ) => T::from_async_str( io, s ).await.ok(),
-        _ => None
+    if bytes.len() == 0
+    {
+        return Ok( "".to_string() );
     }
-}
 
-pub async fn parse_query_params_from_async_str<T>( io : &IO ) -> Option<T>
-where T: FromAsyncStr<T>
-{
-    match std::str::from_utf8( &io.request.uri.query ) {
-        Ok( s ) => T::from_async_str( io, s ).await.ok(),
-        Err( _e ) => None
+    let map = 
+        serde_json::from_slice::<serde_json::Value>( &bytes )
+        .map_err( | e | Error::ParserError( e.to_string() ) )?;
+
+    match map
+    {
+        serde_json::Value::Object( o ) =>
+        {
+            match o.get( param )
+            {
+                Some( v ) => match v
+                {
+                    serde_json::Value::String( s ) => Ok( s.clone() ),
+                    _ => Ok( v.to_string() )
+                },
+                _ => Ok( "".to_string() )
+            }
+        },
+        _ => Err( Error::ParserError( "Not an object".to_string() ) )
     }
 }

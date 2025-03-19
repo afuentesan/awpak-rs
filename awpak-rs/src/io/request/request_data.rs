@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{error::error::Error, io::{cookies::cookies::Cookies, headers::headers::Headers}};
 
-use super::request_body::RequestBody;
+use super::body_data::BodyData;
 
 /// Represents an incoming HTTP request.
 ///
@@ -83,7 +83,7 @@ pub struct RequestData
     ///     println!("Received file: {}", file.filename);
     /// }
     /// ```
-    pub body : RequestBody,
+    pub body : BodyData,
 
     /// The cookies included in the request.
     ///
@@ -232,7 +232,7 @@ impl Default for Uri
 
 impl RequestData
 {
-    pub fn new( uri : Uri, method : String, headers : Headers, cookies : Cookies, body : RequestBody ) -> Self
+    pub fn new( uri : Uri, method : String, headers : Headers, cookies : Cookies, body : BodyData ) -> Self
     {
         Self
         {
@@ -264,7 +264,7 @@ impl Default for RequestData
             uri : Uri::default(),
             method : "get".to_string(),
             headers : Headers::new(),
-            body : RequestBody::default(),
+            body : BodyData::default(),
             cookies : Cookies::new()
         }
     }

@@ -297,6 +297,17 @@ impl DeserializeWithIO for u128
     }
 }
 
+impl DeserializeWithIO for usize
+{
+    fn deserialize_with_io( 
+        bytes : Arc<Box<[u8]>>, 
+        __io : Arc<Mutex<Option<IO>>> 
+    ) -> Result<Self, Error>
+    {
+        deserialize_from_str_remove_quotation_marks( bytes )
+    }
+}
+
 impl DeserializeWithIO for char
 {
     fn deserialize_with_io( 

@@ -1,6 +1,9 @@
+use darling::FromMeta;
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens as _};
 use syn::{Data, Fields};
+
+use crate::util::utils::get_attributes;
 
 
 pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
@@ -203,21 +206,34 @@ pub fn deserialize_with_io_impl( item : TokenStream ) -> TokenStream
     }.into()
 }
 
+#[derive(FromMeta)]
+struct AttributeOptions
+{
+    deserialize_with : proc_macro2::Ident
+}
+
 fn get_with_context_function( attrs: &[ syn::Attribute ] ) -> Option<syn::Ident>
 {
     for attr in attrs
     {
-        if let Ok( syn::Meta::List( meta_list ) ) = attr.meta.clone().try_into()
+        if let Ok( syn::Meta::List( _ ) ) = attr.meta.clone().try_into()
         {
             if attr.path().is_ident( "io_deserializer" )
             {
-                for nested_meta in meta_list.tokens.into_iter()
-                {
-                    if let Ok( f ) = syn::parse2::<syn::Ident>( nested_meta.into() )
-                    {
-                        return Some( f )
-                    }
-                }
+                let AttributeOptions { deserialize_with } = match get_attributes( attr.meta.require_list().ok()?.tokens.clone().into() ) {
+                    Ok( v ) => v,
+                    Err( _e ) => continue
+                };
+
+                return Some( deserialize_with )
+
+                // for nested_meta in meta_list.tokens.into_iter()
+                // {
+                //     if let Ok( f ) = syn::parse2::<syn::Ident>( nested_meta.into() )
+                //     {
+                //         return Some( f )
+                //     }
+                // }
             }
         }
     }

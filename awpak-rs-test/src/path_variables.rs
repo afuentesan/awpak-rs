@@ -1,5 +1,5 @@
 
-use awpak_rs::from_async_str::FromAsyncStr;
+use awpak_rs::io::deserializer::from_path_variable::FromPathVariable;
 use awpak_rs::io::io::IO;
 use awpak_rs::get;
 use serde::Serialize;
@@ -10,14 +10,14 @@ struct ObjectPathVariable
     x : usize
 }
 
-impl FromAsyncStr<ObjectPathVariable> for ObjectPathVariable
+impl FromPathVariable for ObjectPathVariable
 {
-    async fn from_async_str( _io : &IO, s : &str ) -> Result<ObjectPathVariable, ()>
+    async fn from_path_variable( _io : &IO, s : &str ) -> Result<ObjectPathVariable, String>
     {
         match s.parse::<usize>()
         {
             Ok( x ) => Ok( ObjectPathVariable { x } ),
-            _ => Err( () )
+            _ => Err( "".to_string() )
         }
     }
 }
@@ -49,4 +49,49 @@ fn get_echo_path_variable_object(
 ) -> ObjectPathVariable
 {
     variable
+}
+
+#[get( url = "/get_echo/path_variable/object/custom_deserializer/{variable}" )]
+fn get_echo_path_variable_object_custom_deserializer(
+    #[path_variable(deserialize_with = custom_deserialize_path_variable)]
+    variable : ObjectPathVariable
+) -> ObjectPathVariable
+{
+    variable
+}
+
+async fn custom_deserialize_path_variable( io : &IO, s : &str ) -> Result<ObjectPathVariable, String>
+{
+    match s.parse::<usize>()
+    {
+        Ok( x ) => Ok( ObjectPathVariable { x : x + io.response.status as usize } ),
+        _ => Err( "".to_string() )
+    }
+}
+
+#[get( url = "/get_echo/path_variable/vec/u32/{nums}" )]
+fn get_echo_path_variable_vec_u32_deserializer(
+    #[path_variable]
+    nums : Vec<u32>
+) -> Vec<u32>
+{
+    nums
+}
+
+#[get( url = "/get_echo/path_variable_renamed/vec/u32/{nums_renamed}" )]
+fn get_echo_path_variable_renamed_vec_u32_deserializer(
+    #[path_variable( name="nums_renamed" )]
+    nums : Vec<u32>
+) -> Vec<u32>
+{
+    nums
+}
+
+#[get( url = "/get_echo/path_variable/vec/objects/{objs}" )]
+fn get_echo_path_variable_vec_objects_deserializer(
+    #[path_variable]
+    objs : Vec<ObjectPathVariable>
+) -> Vec<ObjectPathVariable>
+{
+    objs
 }
